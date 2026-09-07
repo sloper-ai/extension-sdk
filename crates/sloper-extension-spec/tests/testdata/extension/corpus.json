@@ -1,0 +1,621 @@
+[
+  {
+    "name": "read and write sources",
+    "manifest": {
+      "name": "acme.billing",
+      "version": "0.1.0",
+      "label": "Acme Billing",
+      "description": "Import and inspect billing invoices.",
+      "connections": {
+        "ledger": {
+          "profile": "acme.ledger",
+          "scopes": [
+            "invoices.read"
+          ]
+        }
+      },
+      "resources": {
+        "invoices": {
+          "capabilities": [
+            "read",
+            "write"
+          ],
+          "key": "id",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "maxLength": 512
+              },
+              "number": {
+                "type": "string"
+              },
+              "document": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "source",
+                "mediaTypes": [
+                  "application/pdf"
+                ],
+                "maxBytes": 10485760
+              }
+            },
+            "required": [
+              "id",
+              "number"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "actions": {
+        "pull": {
+          "mode": "background",
+          "connections": [
+            "ledger"
+          ],
+          "resources": {
+            "invoices": [
+              "write"
+            ]
+          }
+        },
+        "inspect": {
+          "mode": "background",
+          "resources": {
+            "invoices": [
+              "read"
+            ]
+          }
+        }
+      }
+    },
+    "code": null
+  },
+  {
+    "name": "required key",
+    "manifest": {
+      "name": "acme.billing",
+      "version": "0.1.0",
+      "label": "Acme Billing",
+      "description": "Import and inspect billing invoices.",
+      "connections": {
+        "ledger": {
+          "profile": "acme.ledger",
+          "scopes": [
+            "invoices.read"
+          ]
+        }
+      },
+      "resources": {
+        "invoices": {
+          "capabilities": [
+            "read",
+            "write"
+          ],
+          "key": "id",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "maxLength": 512
+              },
+              "number": {
+                "type": "string"
+              },
+              "document": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "source",
+                "mediaTypes": [
+                  "application/pdf"
+                ],
+                "maxBytes": 10485760
+              }
+            },
+            "required": [
+              "number"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "actions": {
+        "pull": {
+          "mode": "background",
+          "connections": [
+            "ledger"
+          ],
+          "resources": {
+            "invoices": [
+              "write"
+            ]
+          }
+        },
+        "inspect": {
+          "mode": "background",
+          "resources": {
+            "invoices": [
+              "read"
+            ]
+          }
+        }
+      }
+    },
+    "code": "MANIFEST_RESOURCE_KEY_INVALID"
+  },
+  {
+    "name": "reader parameters",
+    "manifest": {
+      "name": "acme.billing",
+      "version": "0.1.0",
+      "label": "Acme Billing",
+      "description": "Import and inspect billing invoices.",
+      "connections": {
+        "ledger": {
+          "profile": "acme.ledger",
+          "scopes": [
+            "invoices.read"
+          ]
+        }
+      },
+      "resources": {
+        "invoices": {
+          "capabilities": [
+            "read",
+            "write"
+          ],
+          "key": "id",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "maxLength": 512
+              },
+              "number": {
+                "type": "string"
+              },
+              "document": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "source",
+                "mediaTypes": [
+                  "application/pdf"
+                ],
+                "maxBytes": 10485760
+              }
+            },
+            "required": [
+              "id",
+              "number"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "actions": {
+        "pull": {
+          "mode": "background",
+          "connections": [
+            "ledger"
+          ],
+          "resources": {
+            "invoices": [
+              "write"
+            ]
+          }
+        },
+        "inspect": {
+          "mode": "background",
+          "resources": {
+            "invoices": [
+              "read"
+            ]
+          },
+          "parameters": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "code": "MANIFEST_READER_WITH_PARAMETERS"
+  },
+  {
+    "name": "capability union",
+    "manifest": {
+      "name": "acme.billing",
+      "version": "0.1.0",
+      "label": "Acme Billing",
+      "description": "Import and inspect billing invoices.",
+      "connections": {
+        "ledger": {
+          "profile": "acme.ledger",
+          "scopes": [
+            "invoices.read"
+          ]
+        }
+      },
+      "resources": {
+        "invoices": {
+          "capabilities": [
+            "read"
+          ],
+          "key": "id",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "maxLength": 512
+              },
+              "number": {
+                "type": "string"
+              },
+              "document": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "source",
+                "mediaTypes": [
+                  "application/pdf"
+                ],
+                "maxBytes": 10485760
+              }
+            },
+            "required": [
+              "id",
+              "number"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "actions": {
+        "pull": {
+          "mode": "background",
+          "connections": [
+            "ledger"
+          ],
+          "resources": {
+            "invoices": [
+              "write"
+            ]
+          }
+        },
+        "inspect": {
+          "mode": "background",
+          "resources": {
+            "invoices": [
+              "read"
+            ]
+          }
+        }
+      }
+    },
+    "code": "MANIFEST_INVALID_VALUE"
+  },
+  {
+    "name": "build version",
+    "manifest": {
+      "name": "acme.billing",
+      "version": "0.1.0+build",
+      "label": "Acme Billing",
+      "description": "Import and inspect billing invoices.",
+      "connections": {
+        "ledger": {
+          "profile": "acme.ledger",
+          "scopes": [
+            "invoices.read"
+          ]
+        }
+      },
+      "resources": {
+        "invoices": {
+          "capabilities": [
+            "read",
+            "write"
+          ],
+          "key": "id",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "maxLength": 512
+              },
+              "number": {
+                "type": "string"
+              },
+              "document": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "source",
+                "mediaTypes": [
+                  "application/pdf"
+                ],
+                "maxBytes": 10485760
+              }
+            },
+            "required": [
+              "id",
+              "number"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "actions": {
+        "pull": {
+          "mode": "background",
+          "connections": [
+            "ledger"
+          ],
+          "resources": {
+            "invoices": [
+              "write"
+            ]
+          }
+        },
+        "inspect": {
+          "mode": "background",
+          "resources": {
+            "invoices": [
+              "read"
+            ]
+          }
+        }
+      }
+    },
+    "code": "MANIFEST_INVALID_VALUE"
+  },
+  {
+    "name": "prerelease zero",
+    "manifest": {
+      "name": "acme.billing",
+      "version": "0.1.0-01",
+      "label": "Acme Billing",
+      "description": "Import and inspect billing invoices.",
+      "connections": {
+        "ledger": {
+          "profile": "acme.ledger",
+          "scopes": [
+            "invoices.read"
+          ]
+        }
+      },
+      "resources": {
+        "invoices": {
+          "capabilities": [
+            "read",
+            "write"
+          ],
+          "key": "id",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "maxLength": 512
+              },
+              "number": {
+                "type": "string"
+              },
+              "document": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "source",
+                "mediaTypes": [
+                  "application/pdf"
+                ],
+                "maxBytes": 10485760
+              }
+            },
+            "required": [
+              "id",
+              "number"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "actions": {
+        "pull": {
+          "mode": "background",
+          "connections": [
+            "ledger"
+          ],
+          "resources": {
+            "invoices": [
+              "write"
+            ]
+          }
+        },
+        "inspect": {
+          "mode": "background",
+          "resources": {
+            "invoices": [
+              "read"
+            ]
+          }
+        }
+      }
+    },
+    "code": "MANIFEST_INVALID_VALUE"
+  },
+  {
+    "name": "unknown keyword",
+    "manifest": {
+      "name": "acme.billing",
+      "version": "0.1.0",
+      "label": "Acme Billing",
+      "description": "Import and inspect billing invoices.",
+      "connections": {
+        "ledger": {
+          "profile": "acme.ledger",
+          "scopes": [
+            "invoices.read"
+          ]
+        }
+      },
+      "resources": {
+        "invoices": {
+          "capabilities": [
+            "read",
+            "write"
+          ],
+          "key": "id",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "maxLength": 512
+              },
+              "number": {
+                "type": "string"
+              },
+              "document": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "source",
+                "mediaTypes": [
+                  "application/pdf"
+                ],
+                "maxBytes": 10485760
+              }
+            },
+            "required": [
+              "id",
+              "number"
+            ],
+            "additionalProperties": false,
+            "default": {}
+          }
+        }
+      },
+      "actions": {
+        "pull": {
+          "mode": "background",
+          "connections": [
+            "ledger"
+          ],
+          "resources": {
+            "invoices": [
+              "write"
+            ]
+          }
+        },
+        "inspect": {
+          "mode": "background",
+          "resources": {
+            "invoices": [
+              "read"
+            ]
+          }
+        }
+      }
+    },
+    "code": "MANIFEST_INVALID_VALUE"
+  },
+  {
+    "name": "source configuration",
+    "manifest": {
+      "name": "acme.billing",
+      "version": "0.1.0",
+      "label": "Acme Billing",
+      "description": "Import and inspect billing invoices.",
+      "connections": {
+        "ledger": {
+          "profile": "acme.ledger",
+          "scopes": [
+            "invoices.read"
+          ]
+        }
+      },
+      "resources": {
+        "invoices": {
+          "capabilities": [
+            "read",
+            "write"
+          ],
+          "key": "id",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "maxLength": 512
+              },
+              "number": {
+                "type": "string"
+              },
+              "document": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "source",
+                "mediaTypes": [
+                  "application/pdf"
+                ],
+                "maxBytes": 10485760
+              }
+            },
+            "required": [
+              "id",
+              "number"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "actions": {
+        "pull": {
+          "mode": "background",
+          "connections": [
+            "ledger"
+          ],
+          "resources": {
+            "invoices": [
+              "write"
+            ]
+          }
+        },
+        "inspect": {
+          "mode": "background",
+          "resources": {
+            "invoices": [
+              "read"
+            ]
+          }
+        }
+      },
+      "configuration": {
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "source"
+          }
+        }
+      }
+    },
+    "code": "MANIFEST_SOURCE_MISPLACED"
+  }
+]

@@ -1,0 +1,17 @@
+error[E0080]: evaluation panicked: `media_types` and `max_bytes` require a `Source` property.
+ --> tests/ui/fail/source_constraint_on_string.rs:3:10
+  |
+3 | #[derive(Schema)]
+  |          ^^^^^^ evaluation of `Value::__SLOPER_SCHEMA_REST` failed here
+
+note: erroneous constant encountered
+ --> tests/ui/fail/source_constraint_on_string.rs:4:8
+  |
+4 | struct Value {
+  |        ^^^^^
+
+note: erroneous constant encountered
+ --> tests/ui/fail/source_constraint_on_string.rs:9:21
+  |
+9 | fn main() { let _ = Value::JSON; }
+  |                     ^^^^^^^^^^^

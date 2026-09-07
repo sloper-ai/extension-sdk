@@ -1,0 +1,23 @@
+error: Nested `Option` cannot be represented; use one `Option<T>`.
+ --> tests/ui/fail/unsupported_shapes.rs:4:24
+  |
+4 | struct Nested { value: Option<Option<String>> }
+  |                        ^^^^^^^^^^^^^^^^^^^^^^
+
+error: Unsupported schema type; use `String`, `bool`, `f64`, `i32`, `u32`, a derived user type, or an explicitly supported container.
+ --> tests/ui/fail/unsupported_shapes.rs:7:22
+  |
+7 | struct Wide { value: u64 }
+  |                      ^^^
+
+error: Data-carrying enums are unsupported; use a unit enum or a closed object.
+  --> tests/ui/fail/unsupported_shapes.rs:10:13
+   |
+10 | enum Data { Value(String) }
+   |             ^^^^^^^^^^^^^
+
+error: Recursive schema types are unsupported; remove the recursive property.
+  --> tests/ui/fail/unsupported_shapes.rs:13:30
+   |
+13 | struct Recursive { next: Vec<Recursive> }
+   |                              ^^^^^^^^^

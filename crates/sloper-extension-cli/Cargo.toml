@@ -1,0 +1,61 @@
+[package]
+name = "sloper-extension-cli"
+version = "0.0.0"
+edition.workspace = true
+rust-version.workspace = true
+description = "Standalone authoring, execution, and publication tools for Sloper extensions"
+readme.workspace = true
+homepage.workspace = true
+repository.workspace = true
+license-file = "LICENSE"
+keywords.workspace = true
+categories = ["command-line-utilities", "development-tools", "wasm"]
+include = ["LICENSE", "build.rs", "release-revision", "src/**", "templates/**", "tests/**"]
+publish = ["crates-io"]
+
+[package.metadata.binstall]
+pkg-url = "{ repo }/releases/download/v{ version }/{ name }-{ target }.tar.gz"
+bin-dir = "{ bin }{ binary-ext }"
+pkg-fmt = "tgz"
+
+[package.metadata.binstall.overrides.x86_64-pc-windows-msvc]
+pkg-url = "{ repo }/releases/download/v{ version }/{ name }-{ target }.zip"
+bin-dir = "{ bin }{ binary-ext }"
+pkg-fmt = "zip"
+
+[[bin]]
+name = "sloper-extension"
+path = "src/main.rs"
+
+[dependencies]
+async-trait.workspace = true
+base64.workspace = true
+bytes.workspace = true
+clap.workspace = true
+futures-util.workspace = true
+generated_client = { package = "sloper-extension-api", path = "../sloper-extension-api", version = "0.0.0" }
+png.workspace = true
+reqwest = { workspace = true, features = ["json", "multipart", "query", "rustls", "stream"] }
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+sloper-extension-host = { workspace = true, features = ["runtime"] }
+sloper-extension-spec.workspace = true
+tempfile.workspace = true
+thiserror.workspace = true
+time = { workspace = true, features = ["std"] }
+tokio = { workspace = true, features = ["io-util", "macros", "net", "process", "rt-multi-thread", "sync", "time"] }
+url.workspace = true
+uuid.workspace = true
+zeroize = { workspace = true, features = ["serde"] }
+
+[dev-dependencies]
+wasmparser.workspace = true
+wat.workspace = true
+
+[build-dependencies]
+serde_json.workspace = true
+thiserror.workspace = true
+
+[lints]
+workspace = true

@@ -1,0 +1,17 @@
+error[E0080]: evaluation panicked: Scalar formats require a string property without a managed source.
+ --> tests/ui/fail/items_format_on_numbers.rs:3:10
+  |
+3 | #[derive(Schema)]
+  |          ^^^^^^ evaluation of `Value::__SLOPER_SCHEMA_REST` failed here
+
+note: erroneous constant encountered
+ --> tests/ui/fail/items_format_on_numbers.rs:4:8
+  |
+4 | struct Value {
+  |        ^^^^^
+
+note: erroneous constant encountered
+ --> tests/ui/fail/items_format_on_numbers.rs:9:21
+  |
+9 | fn main() { let _ = Value::JSON; }
+  |                     ^^^^^^^^^^^

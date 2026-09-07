@@ -1,0 +1,173 @@
+amends "package://github.com/jdx/hk/releases/download/v1.58.1/hk@1.58.1#/Config.pkl"
+
+import "package://github.com/jdx/hk/releases/download/v1.58.1/hk@1.58.1#/Builtins.pkl"
+
+min_hk_version = "1.58.1"
+hide_warnings = List("missing-profiles")
+
+// Generated artifacts and vendored WASI files retain their original bytes.
+local generatedFiles =
+  List(
+    "**/*.lock",
+    "**/generated/**",
+    "**/tests/fixtures/*.wasm",
+    "crates/sloper-extension-spec/schema/extension-manifest.schema.json",
+    "crates/sloper-extension-spec/wit/licenses/**",
+    "crates/sloper-extension-spec/wit/deps/{cli,clocks,filesystem,http,io,random,sockets}.wit",
+  )
+
+local rustFiles =
+  List(
+    ".cargo/**",
+    "Cargo.toml",
+    "Cargo.lock",
+    "**/*.rs",
+    "**/Cargo.toml",
+    "rust-toolchain.toml",
+    "rustfmt.toml",
+  )
+
+local slow = List("slow")
+
+local checks = new Mapping<String, Step> {
+  // Pre-commit formats staged files. Pre-push and CI include the slow profile.
+  ["bom"] = (Builtins.byte_order_marker) {
+    exclude = generatedFiles
+  }
+  ["case-conflicts"] = Builtins.check_case_conflict
+  ["executables-have-shebangs"] = Builtins.check_executables_have_shebangs
+  ["large-files"] = (Builtins.check_added_large_files) {
+    exclude = generatedFiles
+  }
+  ["merge-conflicts"] = Builtins.check_merge_conflict
+  ["mixed-line-endings"] = (Builtins.mixed_line_ending) {
+    exclude = generatedFiles
+  }
+  ["newlines"] = (Builtins.newlines) {
+    exclude = generatedFiles
+  }
+  ["symlinks"] = Builtins.check_symlinks
+  ["trailing-whitespace"] = (Builtins.trailing_whitespace) {
+    exclude = generatedFiles
+  }
+  ["private-keys"] = Builtins.detect_private_key
+  ["typos"] = (Builtins.typos) {
+    check = "typos --force-exclude {{ files }} || exit 1"
+  }
+  ["rumdl"] = (Builtins.rumdl) {
+    depends = "ryl"
+  }
+  ["lychee"] = (Builtins.lychee) {
+    types = List("markdown", "html")
+    check = "lychee --offline --no-progress {{ files }}"
+    depends = "rumdl"
+  }
+  ["pkl-format"] = (Builtins.pkl_format) {
+    shell = null
+    fix = "pkl format --write {{ files }}"
+  }
+  ["tombi-format"] = (Builtins.tombi_format) {
+    depends = "typos"
+  }
+  ["tombi"] = (Builtins.tombi) {
+    depends = "tombi-format"
+  }
+  ["mise"] = (Builtins.mise) {
+    glob = List("**/mise.toml", "**/mise.*.toml", ".miserc.toml")
+    check = "mise -C \"{{workspace}}\" fmt --check"
+    fix = "mise -C \"{{workspace}}\" fmt"
+    depends = "tombi"
+    workspace_indicator = "mise.toml"
+  }
+  ["actionlint"] = Builtins.actionlint
+  ["pinact"] = (Builtins.pinact) {
+    check = "pinact run --fix=false --no-api {{ files }}"
+    check_diff = null
+  }
+  ["ryl"] = (Builtins.ryl) {
+    glob = List("**/*.{yaml,yml,md,markdown}")
+    types = null
+    check_diff = "ryl check --strict --diff {{ files }}"
+    fix = "ryl check --strict --fix {{ files }}"
+    depends = "typos"
+  }
+  ["jq"] = (Builtins.jq) {
+    check = "jq empty {{ files }}"
+    check_diff = null
+    fix = null
+  }
+  ["ruff-format"] = Builtins.ruff_format
+  ["ruff"] = (Builtins.ruff) {
+    depends = "ruff-format"
+  }
+  ["ty"] = (Builtins.ty) {
+    check = "ty check --force-exclude {{ files }}"
+    depends = "ruff"
+  }
+  ["cargo-script-format"] {
+    glob = List("tasks/*.rs", "**/scripts/*.rs")
+    check = "rustfmt --check {{ files }}"
+    fix = "rustfmt {{ files }}"
+  }
+  ["cargo-fmt"] = (Builtins.cargo_fmt) {
+    glob = rustFiles
+    workspace_indicator = null
+    check = "cargo fmt --check"
+    check_list_files = "cargo fmt --check -- --files-with-diff"
+    fix = "cargo fmt"
+  }
+  ["gitleaks"] = (Builtins.gitleaks) {
+    glob = "**/*"
+    check =
+      "gitleaks git --redact --verbose --no-banner --timeout 60 --log-opts=--all . && gitleaks git --redact --verbose --no-banner --pre-commit --staged ."
+    profiles = slow
+  }
+  ["cargo-clippy"] = (Builtins.cargo_clippy) {
+    glob = rustFiles
+    workspace_indicator = null
+    check =
+      "cargo clippy --locked --workspace --all-targets --no-deps --all-features -- -D warnings"
+    fix =
+      "cargo clippy --fix --locked --workspace --all-targets --no-deps --all-features --allow-dirty --allow-staged -- -D warnings"
+    profiles = slow
+  }
+  ["cargo-package"] {
+    glob = "**/*"
+    depends = "cargo-clippy"
+    check = "mise run //:package"
+    profiles = slow
+  }
+}
+
+hooks {
+  ["commit-msg"] {
+    steps {
+      ["conventional-commit"] = Builtins.check_conventional_commit
+    }
+  }
+  ["pre-commit"] {
+    fix = true
+    stash = "git"
+    steps = checks
+  }
+  ["pre-push"] {
+    steps {
+      ["checks"] {
+        glob = "**/*"
+        check = "hk check --all --slow"
+      }
+      ["build-and-test"] {
+        glob = "**/*"
+        depends = "checks"
+        check = "mise run '//...:build' && mise run '//...:test'"
+      }
+    }
+  }
+  ["fix"] {
+    fix = true
+    steps = checks
+  }
+  ["check"] {
+    steps = checks
+  }
+}

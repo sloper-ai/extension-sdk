@@ -1,0 +1,13 @@
+error[E0080]: evaluation panicked: Connection names cannot repeat within an action.
+  --> tests/ui/fail/duplicate_connections.rs:11:1
+   |
+11 | #[action]
+   | ^^^^^^^^^ evaluation of `__sloper_action_echo::BUFFER` failed here
+   |
+   = note: this error originates in the attribute macro `action` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+note: erroneous constant encountered
+  --> tests/ui/fail/duplicate_connections.rs:12:1
+   |
+12 | async fn echo(_one: Connection<Ledger>, _two: Connection<Other>) -> Result<()> { Ok(()) }
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

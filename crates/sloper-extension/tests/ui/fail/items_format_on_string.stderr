@@ -1,0 +1,5 @@
+error: Declare array item formats directly on `Vec<T>` or `[T; N]`, optionally inside `Option`.
+ --> tests/ui/fail/items_format_on_string.rs:6:12
+  |
+6 |     field: String,
+  |            ^^^^^^

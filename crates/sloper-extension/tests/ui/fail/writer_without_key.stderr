@@ -1,0 +1,11 @@
+error[E0080]: evaluation panicked: A writable resource requires a declared bounded string key.
+ --> tests/ui/fail/writer_without_key.rs:8:1
+  |
+8 | #[action]
+  | ^^^^^^^^^ evaluation of `__sloper_action_normalize::PARTS` failed here
+
+note: erroneous constant encountered
+ --> tests/ui/fail/writer_without_key.rs:9:1
+  |
+9 | async fn normalize(_output: Writer<Invoice>) -> Result<()> { Ok(()) }
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

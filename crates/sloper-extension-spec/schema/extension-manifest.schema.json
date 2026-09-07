@@ -1,0 +1,359 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Dotted publisher-qualified extension name.",
+      "maxLength": 128,
+      "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*(?:\\.[a-z][a-z0-9]*(?:-[a-z0-9]+)*)+$"
+    },
+    "version": {
+      "type": "string",
+      "description": "Exact semantic version without build metadata."
+    },
+    "label": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Optional display label.",
+      "minLength": 1,
+      "maxLength": 60
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable purpose.",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "configuration": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Schema"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "Closed non-secret configuration schema."
+    },
+    "connections": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/Connection"
+      },
+      "description": "Named OAuth profile declarations."
+    },
+    "resources": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/Resource"
+      },
+      "description": "Named item schemas and capabilities."
+    },
+    "actions": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/Action"
+      },
+      "description": "Named executable actions."
+    }
+  },
+  "required": [
+    "name",
+    "version",
+    "description",
+    "actions"
+  ],
+  "description": "One component's complete declaration. The public spec defines this wire\nformat.",
+  "title": "Manifest",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "Schema": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "oneOf": [
+            {
+              "enum": [
+                "null",
+                "boolean",
+                "object",
+                "array",
+                "number",
+                "integer",
+                "string"
+              ]
+            },
+            {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "uniqueItems": true,
+              "contains": {
+                "const": "null"
+              },
+              "items": {
+                "enum": [
+                  "null",
+                  "boolean",
+                  "object",
+                  "array",
+                  "number",
+                  "integer",
+                  "string"
+                ]
+              }
+            }
+          ]
+        },
+        "required": {
+          "type": "array",
+          "maxItems": 256,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+          }
+        },
+        "enum": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "uniqueItems": true
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "format": {
+          "enum": [
+            "date",
+            "date-time",
+            "email",
+            "uri",
+            "uuid",
+            "source"
+          ]
+        },
+        "mediaTypes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "maxBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 104857600
+        },
+        "uniqueItems": {
+          "type": "boolean"
+        },
+        "properties": {
+          "type": "object",
+          "maxProperties": 256,
+          "propertyNames": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/Schema"
+          }
+        },
+        "items": {
+          "$ref": "#/$defs/Schema"
+        },
+        "additionalProperties": {
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "$ref": "#/$defs/Schema"
+            }
+          ]
+        },
+        "minLength": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "maxLength": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "minItems": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "maxItems": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "minimum": {
+          "type": "number",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "maximum": {
+          "type": "number",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "Connection": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "profile": {
+          "type": "string",
+          "description": "Publisher-qualified OAuth profile."
+        },
+        "scopes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Nonempty set of requested scopes.",
+          "minItems": 1,
+          "maxItems": 32
+        }
+      },
+      "required": [
+        "profile",
+        "scopes"
+      ],
+      "description": "A named OAuth profile and scope set."
+    },
+    "Resource": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Capability"
+          },
+          "description": "Exact union of capabilities declared by actions."
+        },
+        "key": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Required bounded string identity for writable resources."
+        },
+        "schema": {
+          "$ref": "#/$defs/Schema",
+          "description": "Object item schema."
+        }
+      },
+      "required": [
+        "capabilities",
+        "schema"
+      ],
+      "description": "Named item schema shared by every referring action."
+    },
+    "Capability": {
+      "oneOf": [
+        {
+          "type": "string",
+          "const": "read",
+          "description": "Read committed projected items."
+        },
+        {
+          "type": "string",
+          "const": "write",
+          "description": "Write validated projected items."
+        }
+      ],
+      "description": "A resource's host-mediated capability."
+    },
+    "Action": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Optional human-readable action purpose.",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "mode": {
+          "$ref": "#/$defs/Mode",
+          "description": "Requested execution mode.",
+          "default": "foreground"
+        },
+        "connections": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Connection names used by this action."
+        },
+        "resources": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/Capability"
+            }
+          },
+          "description": "Resource names and nonempty capability sets."
+        },
+        "parameters": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Schema"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Object parameters schema; absent means an empty object."
+        }
+      },
+      "description": "The capabilities required by one action."
+    },
+    "Mode": {
+      "oneOf": [
+        {
+          "type": "string",
+          "const": "foreground",
+          "description": "An action without resource streams."
+        },
+        {
+          "type": "string",
+          "const": "background",
+          "description": "A durable background operation."
+        }
+      ],
+      "description": "Execution mode, defaulting to foreground."
+    }
+  }
+}

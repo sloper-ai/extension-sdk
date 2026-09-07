@@ -1,0 +1,17 @@
+error: Supported string formats are `date`, `date-time`, `email`, `uri`, and `uuid`; managed sources use `Source`.
+ --> tests/ui/fail/invalid_items_format.rs:5:29
+  |
+5 |     #[schema(items(format = "hostname"))]
+  |                             ^^^^^^^^^^
+
+error: `format` set multiple times.
+  --> tests/ui/fail/invalid_items_format.rs:11:38
+   |
+11 |     #[schema(items(format = "email", format = "uri"))]
+   |                                      ^^^^^^
+
+error: unexpected end of input, expected nested attribute
+  --> tests/ui/fail/invalid_items_format.rs:17:20
+   |
+17 |     #[schema(items())]
+   |                    ^

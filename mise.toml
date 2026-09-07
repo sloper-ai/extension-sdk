@@ -1,0 +1,97 @@
+min_version = "2026.9.3"
+monorepo_root = true
+
+[settings]
+activate_aggressive = true
+lockfile = true
+cargo.binstall = true
+cargo.binstall_only = true
+experimental = true
+idiomatic_version_file_enable_tools = ["rust"]
+
+[task_config]
+cascade = true
+global_inputs = ["@group:cargo_workspace"]
+shell = "nu --no-config-file -c"
+
+[task_config.input_groups]
+cargo_workspace = [
+  ".cargo/config.toml",
+  "Cargo.lock",
+  "Cargo.toml",
+  "rust-toolchain.toml",
+]
+extension_spec = [
+  "crates/sloper-extension-spec/Cargo.toml",
+  "crates/sloper-extension-spec/schema/**",
+  "crates/sloper-extension-spec/src/**",
+  "crates/sloper-extension-spec/wit/**",
+]
+
+[monorepo]
+config_roots = ["."]
+
+[tools]
+actionlint = { version = "1.7.12", depends = ["shellcheck"] }
+gitleaks = "8.30.1"
+"aqua:jdx/hk" = "1.58.1"
+jq = "1.8.2"
+lychee = "0.24.2"
+pinact = "4.1.1"
+pkl = "0.32.1"
+ruff = "0.16.4"
+rumdl = "0.2.67"
+ryl = "0.22.0"
+shellcheck = "0.11.0"
+tombi = "1.5.2"
+ty = "0.0.78"
+typos = "1.50.1"
+cargo-binstall = "1.23.0"
+# cargo-license v0.7.0 and cargo-workspaces v0.4.2 have no upstream binaries.
+"cargo:https://github.com/onur/cargo-license" = { version = "rev:6ec6d98f31cbe58240b64ee486aa1393660bf6d2", crate = "cargo-license" }
+"cargo:https://github.com/pksunkara/cargo-workspaces" = { version = "rev:73a9f77bc80c0459dd725bbfc6601f2e375aeac1", crate = "cargo-workspaces", bin = "cargo-workspaces" }
+nu = "0.115.1"
+python = "3.14.7"
+
+[tool_alias]
+ryl = "aqua:owenlamont/ryl"
+
+[tasks.bootstrap]
+depends = ["bootstrap:cargo", "bootstrap:hooks"]
+outputs = []
+
+[tasks."bootstrap:cargo"]
+hide = true
+run = "cargo fetch --locked"
+outputs = []
+
+[tasks."bootstrap:hooks"]
+hide = true
+run = "hk install --mise"
+sources = ["hk.pkl"]
+outputs = []
+
+[tasks.build]
+run = "cargo build --locked --workspace --all-features"
+outputs = []
+
+[tasks.test]
+run = [
+  "python -m unittest discover -s scripts/ci -p 'test_*.py'",
+  "cargo test --locked -p sloper-extension-spec -p sloper-extension-host --no-default-features",
+  "cargo test --locked --workspace --all-features",
+]
+outputs = []
+
+[tasks.check]
+run = "hk check --all --slow"
+sources = ["rustfmt.toml"]
+outputs = []
+
+[tasks.package]
+run = "cargo package --locked --all-features --no-verify --allow-dirty -p sloper-extension-spec -p sloper-extension-macros -p sloper-extension-host -p sloper-extension -p sloper-extension-api -p sloper-extension-cli"
+outputs = []
+
+[tasks."generate:schema"]
+file = "scripts/generate_schema.nu"
+outputs = []

@@ -1,0 +1,27 @@
+[package]
+name = "sloper-sdk-test-guest"
+version = "0.0.0"
+edition = "2024"
+description = "SDK spec execution fixture"
+license-file = "../../../../LICENSE"
+publish = false
+
+[workspace]
+
+[lib]
+crate-type = ["cdylib"]
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+sha2 = "0.11.0"
+sloper-extension-host = { path = "../.." }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+futures = "0.3.34"
+log = "0.4.34"
+serde = { version = "1.0.229", features = ["derive"] }
+sloper-extension = { path = "../../../sloper-extension" }
+time = { version = "0.3.55", default-features = false, features = ["parsing"] }
+
+[profile.release]
+opt-level = "s"
+strip = "debuginfo"

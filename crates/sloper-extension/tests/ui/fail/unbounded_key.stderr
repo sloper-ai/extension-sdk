@@ -1,0 +1,5 @@
+error: A resource key must be a required `String` with `#[schema(max_length = 512)]` or a smaller positive bound.
+ --> tests/ui/fail/unbounded_key.rs:6:18
+  |
+6 | struct Invoice { id: String }
+  |                  ^^^^^^^^^^

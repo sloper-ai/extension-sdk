@@ -1,0 +1,14 @@
+error[E0277]: the trait bound `Vec<String>: Schema` is not satisfied
+ --> tests/ui/fail/hidden_container_alias.rs:6:23
+  |
+6 | struct Value { names: Names }
+  |                       ^^^^^ the trait `Schema` is not implemented for `Vec<String>`
+  |
+  = help: the following other types implement trait `Schema`:
+            Source
+            String
+            Value
+            bool
+            f64
+            i32
+            u32

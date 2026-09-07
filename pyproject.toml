@@ -1,0 +1,81 @@
+[tool.ruff]
+required-version = "0.16.4"
+target-version = "py314"
+extend-exclude = ["**/generated/**"]
+force-exclude = true
+
+[tool.ruff.lint]
+extend-select = ["T100"]
+
+[tool.rumdl]
+[tool.rumdl.global]
+exclude = ["**/*.lock", "**/generated/**"]
+
+[tool.rumdl.MD013]
+enabled = false
+
+[tool.ryl]
+ignore = [
+  "**/*.lock",
+  "**/*-lock.yaml",
+  "**/generated/**",
+]
+
+[tool.ryl.files]
+yaml = ["**/*.yaml", "**/*.yml"]
+markdown = ["**/*.md", "**/*.markdown"]
+
+[tool.ryl.rules]
+anchors = "enable"
+braces = "enable"
+brackets = "enable"
+colons = "enable"
+commas = "enable"
+document-end = "disable"
+document-start = "disable"
+empty-lines = "enable"
+empty-values = "disable"
+float-values = "disable"
+hyphens = "enable"
+indentation = "enable"
+key-duplicates = "enable"
+key-ordering = "disable"
+line-length = "disable"
+new-line-at-end-of-file = "enable"
+new-lines = "enable"
+octal-values = "disable"
+quoted-strings = "disable"
+trailing-spaces = "enable"
+
+[tool.ryl.rules.comments]
+level = "warning"
+min-spaces-from-content = 1
+
+[tool.ryl.rules.comments-indentation]
+level = "warning"
+
+[tool.ryl.rules.truthy]
+check-keys = false
+level = "warning"
+
+[tool.tombi]
+
+# Generated files retain their upstream formatting.
+[[tool.tombi.overrides]]
+files.include = ["**/*.lock", "**/generated/**/*.toml"]
+
+[tool.tombi.overrides.format]
+enabled = false
+
+[tool.tombi.overrides.lint]
+enabled = false
+
+[tool.ty]
+[tool.ty.src]
+exclude = ["**/generated/**"]
+
+[tool.typos]
+
+# Generated sources and dependency locks retain their original bytes.
+[tool.typos.files]
+extend-exclude = ["**/*.lock", "**/generated/**", "crates/sloper-extension-spec/wit/licenses/**", "crates/sloper-extension-spec/wit/deps/{cli,clocks,filesystem,http,io,random,sockets}.wit"]

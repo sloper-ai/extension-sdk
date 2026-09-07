@@ -1,0 +1,233 @@
+name: Release extension SDK and CLI
+
+on:
+  push:
+    branches: [release]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Build and verify without publishing
+        type: boolean
+        default: true
+
+concurrency:
+  group: release-${{ github.sha }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: nu {0}
+
+env:
+  # Keep rustup's real toolchains inside the directory cached by mise-action.
+  MISE_DATA_DIR: ${{ github.workspace }}/.cache/mise
+  RUSTUP_HOME: ${{ github.workspace }}/.cache/mise/rustup
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: '0'
+  SLOPER_EXTENSION_SDK_REVISION: ${{ github.sha }}
+
+jobs:
+  prepare:
+    name: Prepare and verify SDK release
+    if: github.event.deleted != true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    outputs:
+      completed: ${{ steps.prepare.outputs.completed }}
+    env:
+      CC_wasm32_wasip2: clang
+    steps:
+      - name: Check out selected SDK revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install pinned mise tools
+        uses: jdx/mise-action@3c2e0cf82a5b2e5249f0d3635a4d83d0ae861518 # v4.2.5
+        with: &mise
+          version: 2026.9.3
+          cache_key_prefix: mise-v2-${{ hashFiles('rust-toolchain.toml') }}
+          cache_save: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/release' }}
+      - name: Cache SDK compilation dependencies
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          prefix-key: rust-${{ hashFiles('Cargo.toml') }}
+          shared-key: sdk-ubuntu-24.04
+          cache-on-failure: true
+          cache-bin: false
+          save-if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/release' }}
+          workspaces: |
+            . -> target
+            crates/sloper-extension-host/tests/guest -> target
+            crates/sloper-extension-host/tests/sdk-guest -> target
+      - name: Prepare and verify the selected snapshot
+        id: prepare
+        env:
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: nu .github/scripts/release.nu prepare --dry-run=($env.DRY_RUN == 'true')
+      # rust-cache v2.9.2 probes both layouts even when trybuild only creates one.
+      - name: Prepare nested test cache directories
+        if: always()
+        run: mkdir target/tests/target target/tests/trybuild
+      - name: Upload prepared release source
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: steps.prepare.outputs.completed != 'true'
+        with:
+          name: release-source
+          include-hidden-files: true
+          path: |
+            .cache/release/source.tar.gz
+            .cache/release/release.json
+          if-no-files-found: error
+
+  build:
+    needs: prepare
+    if: needs.prepare.outputs.completed != 'true'
+    name: Build extension CLI (${{ matrix.target }})
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15
+            target: aarch64-apple-darwin
+          - runner: ubuntu-24.04
+            target: x86_64-unknown-linux-gnu
+          - runner: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+          - runner: windows-2022
+            target: x86_64-pc-windows-msvc
+    env:
+      RUSTFLAGS: ${{ matrix.target == 'x86_64-pc-windows-msvc' && '-C target-feature=+crt-static' || '' }}
+    steps:
+      - name: Check out selected SDK revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install pinned mise tools
+        uses: jdx/mise-action@3c2e0cf82a5b2e5249f0d3635a4d83d0ae861518 # v4.2.5
+        with: *mise
+      # Compute the key from the checked-in manifests before applying release versions.
+      - name: Cache native CLI dependencies
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          prefix-key: rust-${{ hashFiles('Cargo.toml') }}
+          shared-key: cli-${{ matrix.target }}-${{ matrix.runner }}
+          cache-on-failure: true
+          cache-bin: false
+          save-if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/release' }}
+      - name: Download prepared release source
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: release-source
+          path: .cache/release
+          digest-mismatch: error
+      - name: Restore prepared source
+        run: nu .github/scripts/release.nu restore
+      - name: Generate dependency licenses
+        env:
+          TARGET: ${{ matrix.target }}
+        run: nu .github/scripts/release.nu licenses $env.TARGET
+      - name: Build CLI archive and checksum
+        id: build
+        uses: taiki-e/upload-rust-binary-action@f0d45ae91ee7b8ee928de7a9d04d893a08bcbec6 # v1.30.2
+        with:
+          bin: sloper-extension
+          manifest-path: crates/sloper-extension-cli/Cargo.toml
+          target: ${{ matrix.target }}
+          archive: sloper-extension-cli-$target
+          include: LICENSE,.cache/release/ThirdPartyNotices.txt,.cache/release/release.json
+          checksum: sha256
+          locked: true
+          build-tool: cargo
+          profile: release
+          dry-run: true
+          dry-run-intended: true
+      - name: Upload CLI archive and checksum (${{ matrix.target }})
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: binaries-${{ matrix.target }}
+          path: |
+            ${{ steps.build.outputs.tar }}
+            ${{ steps.build.outputs.zip }}
+            ${{ steps.build.outputs.sha256 }}
+          if-no-files-found: error
+
+  publish:
+    name: Publish SDK crates and CLI release
+    needs: [prepare, build]
+    if: github.event_name == 'push' || !inputs.dry_run
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    environment: release
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      CC_wasm32_wasip2: clang
+    steps:
+      - name: Check out selected SDK revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install pinned mise tools
+        uses: jdx/mise-action@3c2e0cf82a5b2e5249f0d3635a4d83d0ae861518 # v4.2.5
+        with:
+          version: 2026.9.3
+          cache_key_prefix: mise-v2-${{ hashFiles('rust-toolchain.toml') }}
+          cache_save: false
+      - name: Restore verified SDK dependencies
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          prefix-key: rust-${{ hashFiles('Cargo.toml') }}
+          shared-key: sdk-ubuntu-24.04
+          cache-bin: false
+          save-if: false
+          workspaces: |
+            . -> target
+            crates/sloper-extension-host/tests/guest -> target
+            crates/sloper-extension-host/tests/sdk-guest -> target
+      - name: Download prepared release source
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: release-source
+          path: .cache/release
+          digest-mismatch: error
+      - name: Download CLI archives and checksums
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: binaries-*
+          merge-multiple: true
+          path: .cache/release/assets
+          digest-mismatch: error
+      - name: Restore prepared source
+        run: nu .github/scripts/release.nu restore
+      - name: Stage GitHub release
+        id: stage
+        run: nu .github/scripts/release.nu stage
+      - name: Attest CLI build provenance
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        if: steps.stage.outputs.completed != 'true'
+        with:
+          subject-path: .cache/release/assets/*
+      - name: Authenticate with crates.io
+        uses: rust-lang/crates-io-auth-action@c6f97d42243bad5fab37ca0427f495c86d5b1a18 # v1.0.5
+        if: steps.stage.outputs.completed != 'true'
+        id: auth
+      - name: Publish Cargo packages in dependency order
+        if: steps.stage.outputs.completed != 'true'
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
+          CARGO_TARGET_DIR: ${{ github.workspace }}/target
+        run: cargo workspaces publish --publish-as-is --allow-dirty --locked --no-remove-dev-deps
+      - name: Publish the completed GitHub release
+        if: steps.stage.outputs.completed != 'true'
+        run: nu .github/scripts/release.nu finish

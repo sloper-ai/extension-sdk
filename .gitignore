@@ -1,0 +1,53 @@
+# Build output. The CLI writes stamped components under each example's dist
+# directory; generated bindings stay in Cargo's target directory.
+target/
+dist/
+build/
+coverage/
+
+# Dependency and tool caches.
+.cache/
+.mise-task-cache/
+
+# Local editor, agent, and OS state.
+.idea/
+.vscode/*
+!.vscode/extensions.json
+.cursor/
+.claude
+.codex
+.memsearch/
+.mcp.json
+.DS_Store
+Thumbs.db
+
+# Local credentials and signing material.
+.env
+.env.*
+.envrc
+.secrets/
+*.key
+*.p12
+*.pfx
+*.p8
+*-private.pem
+
+# Local logs and scratch files.
+*.log
+*.pid
+*.bak
+*.orig
+*.rej
+*.swp
+*.swo
+*~
+*.rs.bk
+*.pdb
+
+# Python tooling bytecode.
+__pycache__/
+*.py[cod]
+
+# Repository check caches.
+.ruff_cache/
+.rumdl_cache/

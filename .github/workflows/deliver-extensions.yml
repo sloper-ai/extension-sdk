@@ -1,0 +1,166 @@
+name: Deliver extensions
+
+on:
+  workflow_call:
+    inputs:
+      sdk-revision:
+        required: true
+        type: string
+      visibility:
+        required: true
+        type: string
+
+permissions: {}
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      count: ${{ steps.plan.outputs.count }}
+      revision: ${{ steps.revision.outputs.sha }}
+      attempt: ${{ steps.revision.outputs.attempt }}
+    env:
+      CC_wasm32_wasip2: clang
+      SOURCE_REPOSITORY: ${{ github.repository }}
+      SOURCE_REVISION: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+      SDK_REVISION: ${{ inputs.sdk-revision }}
+      VISIBILITY: ${{ inputs.visibility }}
+    steps:
+      - name: Check out caller source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: source
+          ref: ${{ env.SOURCE_REVISION }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check out pinned SDK tooling
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: sloper-ai/extension-sdk
+          ref: ${{ inputs.sdk-revision }}
+          path: sdk
+          persist-credentials: false
+      - name: Install mise for pinned release tools
+        uses: jdx/mise-action@3c2e0cf82a5b2e5249f0d3635a4d83d0ae861518 # v4.2.5
+        with:
+          version: 2026.9.3
+          working_directory: sdk
+      - name: Build SDK tooling
+        working-directory: sdk
+        run: |
+          cargo build --locked --package sloper-extension-cli --bin sloper-extension
+          python -m unittest discover -s scripts/ci -p 'test_*.py'
+      - name: Install caller tools
+        uses: jdx/mise-action@3c2e0cf82a5b2e5249f0d3635a4d83d0ae861518 # v4.2.5
+        with:
+          version: 2026.9.3
+          working_directory: source
+      - name: Bootstrap and check caller
+        working-directory: source
+        run: |
+          mise run //:bootstrap
+          mise run //:check
+      - id: revision
+        name: Record caller revision
+        run: printf 'sha=%s\nattempt=%s\n' "$SOURCE_REVISION" "$GITHUB_RUN_ATTEMPT" >> "$GITHUB_OUTPUT"
+      - id: plan
+        name: Select explicit version releases
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: >-
+          python sdk/scripts/ci/extensions.py plan
+          --source source --repository "$SOURCE_REPOSITORY" --revision "$SOURCE_REVISION"
+          --sdk-revision "$SDK_REVISION" --run-id "$GITHUB_RUN_ID" --attempt "$GITHUB_RUN_ATTEMPT"
+          --visibility "$VISIBILITY" --output plan.json
+      - name: Generate extension dependency licenses
+        working-directory: sdk
+        run: |
+          # cargo-license has no --locked flag, so resolving metadata first fails on a
+          # stale lockfile instead of letting cargo-license quietly update it.
+          jq -r '.extensions[].path' ../plan.json | while IFS= read -r directory; do
+            cargo metadata --locked --format-version 1 \
+              --manifest-path "$GITHUB_WORKSPACE/source/$directory/Cargo.toml" \
+              --filter-platform wasm32-wasip2 >/dev/null
+            cargo license \
+              --manifest-path "$GITHUB_WORKSPACE/source/$directory/Cargo.toml" \
+              --filter-platform wasm32-wasip2 --avoid-dev-deps --tsv \
+              --output "$GITHUB_WORKSPACE/source/$directory/ThirdPartyNotices.txt"
+          done
+      - name: Build final components and run acceptance tests
+        run: >-
+          python sdk/scripts/ci/extensions.py build
+          --source "$GITHUB_WORKSPACE/source" --plan plan.json
+          --tool "$GITHUB_WORKSPACE/sdk/target/debug/sloper-extension"
+          --output candidates
+      - name: Retain caller-owned tested components
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: extension-candidates-${{ github.run_id }}-${{ github.run_attempt }}
+          path: candidates
+          if-no-files-found: error
+          retention-days: 30
+
+  stage:
+    name: Publish candidates to staging
+    if: vars.EXTENSION_PUBLICATION_ENABLED == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.verify.outputs.count != '0'
+    needs: verify
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    environment: staging
+    concurrency:
+      group: extension-staging
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      actions: read
+    env:
+      SOURCE_REPOSITORY: ${{ github.repository }}
+      SOURCE_REVISION: ${{ needs.verify.outputs.revision }}
+      SDK_REVISION: ${{ inputs.sdk-revision }}
+      VISIBILITY: ${{ inputs.visibility }}
+      API_URL: ${{ vars.SLOPER_API_URL }}
+      BUILD_ATTEMPT: ${{ needs.verify.outputs.attempt }}
+    steps:
+      - name: Check out trusted publication tooling
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: sloper-ai/extension-sdk
+          ref: ${{ inputs.sdk-revision }}
+          path: sdk
+          persist-credentials: false
+      - name: Install pinned publication tools
+        uses: jdx/mise-action@3c2e0cf82a5b2e5249f0d3635a4d83d0ae861518 # v4.2.5
+        with:
+          version: 2026.9.3
+          working_directory: sdk
+      - name: Build publication tooling without credentials
+        working-directory: sdk
+        run: |
+          cargo build --locked --package sloper-extension-cli --bin sloper-extension
+      - name: Download tested caller artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: extension-candidates-${{ github.run_id }}-${{ needs.verify.outputs.attempt }}
+          path: candidates
+          digest-mismatch: error
+      - name: Publish exact tested bytes to staging
+        env:
+          SLOPER_API_TOKEN: ${{ secrets.SLOPER_API_TOKEN }}
+        run: >-
+          python sdk/scripts/ci/extensions.py publish --artifact candidates
+          --tool "$GITHUB_WORKSPACE/sdk/target/debug/sloper-extension"
+          --repository "$SOURCE_REPOSITORY" --revision "$SOURCE_REVISION" --sdk-revision "$SDK_REVISION"
+          --run-id "$GITHUB_RUN_ID" --attempt "$BUILD_ATTEMPT" --visibility "$VISIBILITY"
+          --environment staging --api-url "$API_URL" --receipt receipts/staging.json
+      - name: Retain verified staging receipt
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: extension-staging-receipt-${{ github.run_id }}-${{ github.run_attempt }}
+          path: receipts
+          if-no-files-found: warn
+          retention-days: 30

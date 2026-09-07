@@ -1,0 +1,68 @@
+name: Verify extension SDK
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions: {}
+
+concurrency:
+  group: sdk-verify-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+defaults:
+  run:
+    shell: nu {0}
+
+env:
+  MISE_DATA_DIR: ${{ github.workspace }}/.cache/mise
+  RUSTUP_HOME: ${{ github.workspace }}/.cache/mise/rustup
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: '0'
+
+jobs:
+  verify:
+    name: Build, lint, and test extension SDK
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    permissions:
+      contents: read
+    env:
+      CC_wasm32_wasip2: clang
+    steps:
+      - name: Check out SDK only
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install mise
+        uses: jdx/mise-action@3c2e0cf82a5b2e5249f0d3635a4d83d0ae861518 # v4.2.5
+        with:
+          version: 2026.9.3
+          cache_key_prefix: mise-v2-${{ hashFiles('rust-toolchain.toml') }}
+          cache_save: ${{ github.ref == 'refs/heads/main' }}
+      - name: Cache SDK compilation dependencies
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          prefix-key: rust-${{ hashFiles('Cargo.toml') }}
+          shared-key: sdk-ubuntu-24.04
+          cache-on-failure: true
+          cache-bin: false
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+          workspaces: |
+            . -> target
+            crates/sloper-extension-host/tests/guest -> target
+            crates/sloper-extension-host/tests/sdk-guest -> target
+      - name: Bootstrap pinned tools
+        run: mise run //:bootstrap
+      - name: Run repository checks
+        run: mise run //:check
+      - name: Build SDK packages
+        run: mise run '//...:build'
+      - name: Test SDK packages
+        run: mise run '//...:test'
+      # rust-cache v2.9.2 probes both layouts even when trybuild only creates one.
+      - name: Prepare nested test cache directories
+        if: always()
+        run: mkdir target/tests/target target/tests/trybuild

@@ -1,0 +1,13 @@
+error[E0080]: evaluation panicked: Extension configuration cannot accept open fields.
+  --> tests/ui/fail/open_configuration.rs:10:1
+   |
+10 | extension! { name: "acme.demo", configuration: Configuration, actions: [echo] }
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ evaluation of `__SLOPER_EXTENSION_BUFFER` failed here
+
+note: erroneous constant encountered
+  --> tests/ui/fail/open_configuration.rs:10:1
+   |
+10 | extension! { name: "acme.demo", configuration: Configuration, actions: [echo] }
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: this note originates in the macro `extension` (in Nightly builds, run with -Z macro-backtrace for more info)

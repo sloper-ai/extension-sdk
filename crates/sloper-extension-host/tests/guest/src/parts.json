@@ -1,0 +1,26 @@
+{"kind":"extension","name":"sloper.host-test","version":"0.0.1","description":"Exercise the canonical component host.","actions":["probe","scratch","tcp","http","allowed","denied","writer","source-failed","source-read","spin","wait","counter","source-produced","reader","memory","source-property","source-oversize","write-bytes","read-bytes","operation-write","operation-retry","operation-cancel","log-flood"],"configuration":{"type":"object","properties":{"label":{"type":"string","maxLength":512}},"additionalProperties":false}}
+{"kind":"connection","name":"ledger","profile":"sloper.fixture","scopes":["test.read"]}
+{"kind":"resource","name":"items","key":"id","schema":{"type":"object","properties":{"id":{"type":"string","maxLength":512},"document":{"type":"string","format":"source","maxBytes":1024},"attachments":{"type":"array","items":{"type":"object","properties":{"document":{"type":"string","format":"source","maxBytes":1024}}}},"value":{"type":"string"}},"required":["id"]}}
+{"kind":"action","name":"probe"}
+{"kind":"action","name":"scratch","parameters":{"type":"object","properties":{"hostPath":{"type":"string"},"hostFilename":{"type":"string"}},"required":["hostPath","hostFilename"]}}
+{"kind":"action","name":"tcp","parameters":{"type":"object","properties":{"address":{"type":"string"}},"required":["address"]}}
+{"kind":"action","name":"http","parameters":{"type":"object","properties":{"authority":{"type":"string"}},"required":["authority"]}}
+{"kind":"action","name":"allowed","connections":["ledger"]}
+{"kind":"action","name":"denied"}
+{"kind":"action","name":"writer","mode":"background","resources":{"items":["write"]}}
+{"kind":"action","name":"source-failed","mode":"background","resources":{"items":["write"]}}
+{"kind":"action","name":"source-read","parameters":{"type":"object","properties":{"document":{"type":"string","format":"source"}},"required":["document"]}}
+{"kind":"action","name":"spin"}
+{"kind":"action","name":"wait","connections":["ledger"]}
+{"kind":"action","name":"counter"}
+{"kind":"action","name":"source-produced","mode":"background","resources":{"items":["write"]}}
+{"kind":"action","name":"reader","mode":"background","resources":{"items":["read"]}}
+{"kind":"action","name":"memory"}
+{"kind":"action","name":"source-property","mode":"background","resources":{"items":["write"]},"parameters":{"type":"object","properties":{"property":{"type":"string","maxLength":4096}},"required":["property"],"additionalProperties":false}}
+{"kind":"action","name":"source-oversize","mode":"background","resources":{"items":["write"]}}
+{"kind":"action","name":"write-bytes","mode":"background","connections":["ledger"],"resources":{"items":["write"]},"parameters":{"type":"object","properties":{"sizes":{"type":"array","items":{"type":"integer","minimum":24,"maximum":1048577}},"redact":{"type":"boolean"},"tokenCount":{"type":"integer","minimum":0,"maximum":1}},"required":["sizes"]}}
+{"kind":"action","name":"read-bytes","mode":"background","resources":{"items":["read"]}}
+{"kind":"action","name":"operation-write","mode":"background","resources":{"items":["write"]},"parameters":{"type":"object","properties":{"id":{"type":"string","maxLength":512},"value":{"type":"string","maxLength":512}},"additionalProperties":false}}
+{"kind":"action","name":"operation-retry","mode":"background","resources":{"items":["write"]},"parameters":{"type":"object","properties":{"id":{"type":"string","maxLength":512},"value":{"type":"string","maxLength":512}},"additionalProperties":false}}
+{"kind":"action","name":"operation-cancel","mode":"background","resources":{"items":["write"]},"parameters":{"type":"object","properties":{"id":{"type":"string","maxLength":512},"value":{"type":"string","maxLength":512}},"additionalProperties":false}}
+{"kind":"action","name":"log-flood","connections":["ledger"],"parameters":{"type":"object","properties":{"count":{"type":"integer","minimum":1,"maximum":20000},"message":{"type":"string","maxLength":8192},"redact":{"type":"boolean"}},"required":["count","message"]}}

@@ -1,0 +1,49 @@
+[package]
+name = "sloper-extension"
+version = "0.0.0"
+edition.workspace = true
+rust-version.workspace = true
+description = "Typed guest capabilities for Sloper extension components"
+readme.workspace = true
+homepage.workspace = true
+repository.workspace = true
+license-file = "LICENSE"
+keywords.workspace = true
+categories = ["development-tools", "wasm"]
+include = ["LICENSE", "build.rs", "src/**"]
+publish = ["crates-io"]
+
+[dependencies]
+const_format.workspace = true
+futures.workspace = true
+log.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+sloper-extension-macros.workspace = true
+thiserror.workspace = true
+time.workspace = true
+wasip2.workspace = true
+wit-bindgen.workspace = true
+zeroize.workspace = true
+
+[dev-dependencies]
+trybuild.workspace = true
+
+[build-dependencies]
+sloper-extension-spec.workspace = true
+
+[target.'cfg(all(target_os = "wasi", target_env = "p2"))'.dependencies]
+tokio = { workspace = true, features = ["net", "rt", "sync", "time"] }
+
+# Execute the SDK's real component with the SDK execution host.
+[target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
+async-trait.workspace = true
+sloper-extension-host = { workspace = true, features = ["runtime"] }
+tokio = { workspace = true, features = ["io-util", "macros", "rt-multi-thread", "sync"] }
+
+[features]
+default = []
+
+[lints]
+workspace = true
