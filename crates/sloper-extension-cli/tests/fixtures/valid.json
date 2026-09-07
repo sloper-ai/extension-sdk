@@ -1,0 +1,72 @@
+{
+  "name": "acme.billing",
+  "version": "0.1.0",
+  "label": "Acme Billing",
+  "description": "Import and inspect billing invoices.",
+  "connections": {
+    "ledger": {
+      "profile": "acme.ledger",
+      "scopes": [
+        "invoices.read"
+      ]
+    }
+  },
+  "resources": {
+    "invoices": {
+      "capabilities": [
+        "read",
+        "write"
+      ],
+      "key": "id",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 512
+          },
+          "number": {
+            "type": "string"
+          },
+          "document": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "source",
+            "mediaTypes": [
+              "application/pdf"
+            ],
+            "maxBytes": 10485760
+          }
+        },
+        "required": [
+          "id",
+          "number"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "actions": {
+    "pull": {
+      "mode": "background",
+      "connections": [
+        "ledger"
+      ],
+      "resources": {
+        "invoices": [
+          "write"
+        ]
+      }
+    },
+    "inspect": {
+      "mode": "background",
+      "resources": {
+        "invoices": [
+          "read"
+        ]
+      }
+    }
+  }
+}

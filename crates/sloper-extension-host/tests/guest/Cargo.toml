@@ -1,0 +1,26 @@
+[package]
+name = "sloper-host-test-guest"
+version = "0.0.0"
+edition = "2024"
+license-file = "../../../../LICENSE"
+publish = false
+
+[workspace]
+
+[lib]
+crate-type = ["cdylib"]
+
+[build-dependencies]
+sloper-extension-spec = { path = "../../../sloper-extension-spec" }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+sha2 = "0.11.0"
+sloper-extension-host = { path = "../.." }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+serde_json = "1.0.151"
+wit-bindgen = { version = "0.61.1", features = ["async-spawn"] }
+
+[profile.release]
+opt-level = "s"
+strip = "debuginfo"

@@ -1,0 +1,5 @@
+error: Only `rename`, `rename_all`, `default`, `skip`, and flatten on `Fields` may change schema serialization.
+ --> tests/ui/fail/serde_conflicts.rs:5:13
+  |
+5 |     #[serde(skip_serializing)]
+  |             ^^^^^^^^^^^^^^^^

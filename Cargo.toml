@@ -1,0 +1,92 @@
+[workspace]
+resolver = "2"
+members = ["crates/sloper-extension", "crates/sloper-extension-api", "crates/sloper-extension-cli", "crates/sloper-extension-host", "crates/sloper-extension-macros", "crates/sloper-extension-spec", "examples/echo", "examples/sync", "tests/runtime-component"]
+
+[workspace.package]
+edition = "2024"
+rust-version = "1.95"
+readme = "README.md"
+homepage = "https://github.com/sloper-ai/extension-sdk"
+repository = "https://github.com/sloper-ai/extension-sdk"
+license-file = "LICENSE"
+keywords = ["extensions", "sloper", "webassembly"]
+publish = false
+
+[workspace.dependencies]
+async-trait = "=0.1.92"
+aws-lc-rs = "1.18.1"
+base64 = "0.23.1"
+bytes = "1.12.1"
+clap = { version = "4.6.6", features = ["derive", "env", "string"] }
+const_format = "=0.2.36"
+derive_builder = "0.20.2"
+ed25519-dalek = { version = "3.0.0", default-features = false }
+encoding_rs = "0.8.41"
+futures = { version = "=0.3.34", default-features = false, features = ["async-await", "std"] }
+futures-util = "0.3.34"
+getrandom = "=0.4.3"
+jsonschema = { version = "0.55.1", default-features = false }
+log = "=0.4.34"
+mime = "0.3.17"
+percent-encoding = "2.3.2"
+png = "0.18.1"
+proc-macro2 = "=1.0.107"
+quote = "=1.0.47"
+rand = "=0.10.2"
+reqwest = { version = "=0.13.5", default-features = false }
+schemars = "1.2.2"
+semver = { version = "1.0.28", features = ["serde"] }
+serde = { version = "=1.0.229", features = ["derive"] }
+serde_json = "=1.0.151"
+sha2 = "=0.11.0"
+sloper-extension = { path = "crates/sloper-extension", version = "0.0.0" }
+sloper-extension-cli = { path = "crates/sloper-extension-cli" }
+sloper-extension-host = { path = "crates/sloper-extension-host", version = "0.0.0" }
+sloper-extension-macros = { path = "crates/sloper-extension-macros", version = "0.0.0" }
+sloper-extension-spec = { path = "crates/sloper-extension-spec", version = "0.0.0" }
+syn = { version = "=3.0.5", features = ["extra-traits", "full"] }
+tempfile = "3.27.0"
+thiserror = "=2.0.20"
+time = { version = "=0.3.55", default-features = false, features = ["formatting", "parsing"] }
+tokio = { version = "=1.53.1", default-features = false }
+tokio-util = { version = "0.7.19", default-features = false }
+trybuild = "1.0.121"
+url = { version = "2.5.8", features = ["serde"] }
+uuid = { version = "1.26.0", features = ["serde", "v4"] }
+wasip2 = "=2.0.0"
+wasmparser = "0.258.0"
+wasmtime-wasi = { version = "48.0.1", default-features = false, features = ["p2"] }
+wasmtime-wasi-http = { version = "48.0.1", default-features = false, features = ["default-send-request", "p2"] }
+wat = "1.258.0"
+wit-bindgen = { version = "=0.61.1", features = ["async-spawn"] }
+wit-component = "0.258.0"
+wit-parser = "0.258.0"
+wstd = { version = "=0.6.8", default-features = false }
+zeroize = "=1.9.0"
+
+[workspace.dependencies.wasmtime]
+version = "48.0.1"
+default-features = false
+features = [
+  "cache",
+  "component-model",
+  "component-model-async",
+  "cranelift",
+  "runtime",
+  "std",
+]
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+module_name_repetitions = "warn"
+pedantic = { level = "warn", priority = -1 }
+
+[workspace.lints.rust]
+missing_debug_implementations = "warn"
+rust_2018_idioms = { level = "warn", priority = -1 }
+unreachable_pub = "warn"
+unsafe_code = "deny"
+
+[profile.release]
+strip = "symbols"
+lto = "thin"

@@ -1,0 +1,34 @@
+[package]
+name = "sloper-extension-spec"
+version = "0.0.0"
+edition.workspace = true
+rust-version.workspace = true
+description = "Canonical manifest and WIT spec for Sloper extensions"
+readme.workspace = true
+homepage.workspace = true
+repository.workspace = true
+license-file = "LICENSE"
+keywords.workspace = true
+categories = ["development-tools", "wasm"]
+include = ["LICENSE", "schema/**", "src/**", "tests/**", "wit/**"]
+publish = ["crates-io"]
+
+[[bin]]
+name = "generate-extension-schema"
+path = "src/bin/generate_extension_schema.rs"
+
+[dependencies]
+schemars.workspace = true
+semver.workspace = true
+serde.workspace = true
+serde_json = { workspace = true, features = ["preserve_order"] }
+thiserror.workspace = true
+time.workspace = true
+url.workspace = true
+uuid.workspace = true
+
+[features]
+default = []
+
+[lints]
+workspace = true

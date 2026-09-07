@@ -1,0 +1,119 @@
+Sloper Ecosystem License 1.0
+
+Copyright 2026 Sloper and the respective copyright holders.
+
+1. Covered material and purpose
+
+This license applies to Sloper-owned source code, object code, documentation,
+examples, schemas, interfaces, generated bindings, and other material expressly
+made available under this license (the "Covered Material"). "Sloper" means the
+copyright holder or authorized licensor of that material operating the Sloper
+business-application platform. "You" means the person or organization exercising
+these permissions.
+
+The "Permitted Purpose" is developing, publishing, maintaining, supporting,
+testing, or running extensions for Sloper. It includes personal and commercial
+use of Sloper, organization workflows, local testing with the standalone Sloper
+extension host, and builds, tests, and publication performed on third-party CI
+or other infrastructure for those Sloper extensions.
+
+2. Permission within the Sloper ecosystem
+
+Subject to this license, Sloper grants You a worldwide, nonexclusive license,
+without a separate SDK license fee or royalty, to inspect, use, reproduce,
+modify, build, test, display, perform, and redistribute the Covered Material,
+in source or compiled form, solely for the Permitted Purpose. You may maintain
+forks, share patches, redistribute the SDK or generated bindings, and distribute
+compiled Covered Material as part of a Sloper extension for that purpose.
+You may charge for Your own extensions, services, and support within the
+Permitted Purpose, subject to any separately applicable service terms.
+
+To the extent Sloper controls patent claims necessarily practiced by the
+Covered Material as supplied, Sloper also grants You a nonexclusive, royalty-
+free license to practice those claims solely in exercising the permissions
+above. This does not grant rights to unrelated combinations or other products.
+
+3. Reuse outside Sloper requires a separate agreement
+
+This license grants no permission to reuse the Covered Material outside the
+Permitted Purpose. Such use requires a separate written commercial license
+from Sloper before it begins, whether the proposed use is commercial,
+noncommercial, educational, internal, or otherwise. Examples include embedding
+the host in another product, using the toolkit to operate a separate extension
+platform, or adapting Covered Material from an extension for another platform.
+Publishing source or obtaining a copy does not grant those additional rights.
+
+There is no change date, automatic conversion, or future grant under a
+permissive or open-source license. Contact Sloper through its official account
+or business contact to arrange separate written terms.
+
+4. Redistribution and modifications
+
+When You redistribute Covered Material or modifications containing it, include
+this license and retain applicable copyright, attribution, patent, license,
+and third-party notices. Clearly identify Your modifications. For compiled
+redistribution, make these notices available with the distribution or its
+accompanying documentation. Recipients receive the permissions in this license
+directly from the relevant licensor; You may not represent broader rights in
+Covered Material than You received. You may set terms for Your own material
+provided they do not remove the recipients' rights or obligations under this
+license for the Covered Material.
+
+This license does not require publication of Your extension source, forks,
+patches, proprietary business logic, configuration, or user data. Redistribution
+requirements apply when You choose to distribute Covered Material.
+
+5. Independent work and third parties
+
+You retain ownership of independently authored extension code and modifications
+You own. Your users retain their rights in their data. Merely using Sloper or
+this toolkit, linking to its interfaces, or generating an extension does not
+transfer that ownership to Sloper. Independently authored material that does
+not contain or adapt Covered Material is not restricted by this license.
+Copied or generated portions of Covered Material remain covered even when
+combined with independently authored code.
+
+Third-party material is governed by its own license and notices, not by this
+license. Sloper grants only rights it owns or is authorized to grant. Nothing
+here changes statutory rights that cannot lawfully be restricted. A separate
+written agreement controls where it expressly provides different rights for
+the same material.
+
+6. Services and marks
+
+This is a code license. It does not provide a Sloper subscription, account,
+hosting, provider access, support commitment, or exemption from applicable
+Sloper service terms. Those services and their charges remain separate.
+No trademark or endorsement license is granted, apart from factual attribution
+and identifying compatibility with Sloper without suggesting endorsement.
+
+7. Compliance and termination
+
+Permissions end if You materially breach this license and do not remedy the
+breach within 30 days after receiving written notice from Sloper. A use outside
+the Permitted Purpose is never licensed by this agreement. On termination,
+cease exercising the terminated permissions and remove copies made solely
+under them, except records required by law. Compliant recipients' licenses are
+not terminated solely because Your license ends. Provisions concerning
+ownership, third-party rights, disclaimers, liability, and
+unlicensed use continue to apply.
+
+8. Warranty and responsibility
+
+To the extent permitted by applicable law, Covered Material is supplied as
+available, without a promise of support, fitness for a particular purpose,
+merchantability, noninfringement, accuracy, or uninterrupted operation. You
+are responsible for evaluating it and for Your extensions, deployments, and
+provider effects. Sloper and the other licensors are not liable, to the extent
+law permits, for indirect, incidental, special, consequential, or punitive
+losses, or lost profits, revenue, data, or business opportunity arising from
+Covered Material or this license. This does not exclude liability that law
+prohibits excluding or obligations expressly accepted in a separate agreement.
+
+9. Remaining rights
+
+Rights not expressly granted are reserved. If a provision is unenforceable,
+the remaining provisions continue to the extent permitted by law. Changes to
+these terms for future material do not amend the terms of a copy You already
+received. Additional permission or an amendment must be given in writing by
+an authorized Sloper representative.

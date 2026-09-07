@@ -1,0 +1,11 @@
+error: Supported string formats are `date`, `date-time`, `email`, `uri`, and `uuid`; managed sources use `Source`.
+ --> tests/ui/fail/unsupported_format.rs:5:23
+  |
+5 |     #[schema(format = "hostname")]
+  |                       ^^^^^^^^^^
+
+error: Supported string formats are `date`, `date-time`, `email`, `uri`, and `uuid`; managed sources use `Source`.
+  --> tests/ui/fail/unsupported_format.rs:11:23
+   |
+11 |     #[schema(format = "source")]
+   |                       ^^^^^^^^

@@ -1,0 +1,29 @@
+[package]
+name = "sloper-extension-macros"
+version = "0.0.0"
+edition.workspace = true
+rust-version.workspace = true
+description = "Authoring macros for typed Sloper extension components"
+readme.workspace = true
+homepage.workspace = true
+repository.workspace = true
+license-file = "LICENSE"
+keywords.workspace = true
+categories = ["development-tools::procedural-macro-helpers", "wasm"]
+include = ["LICENSE", "src/**"]
+publish = ["crates-io"]
+
+[lib]
+proc-macro = true
+
+[dependencies]
+proc-macro2.workspace = true
+quote.workspace = true
+serde_json.workspace = true
+syn.workspace = true
+
+[features]
+default = []
+
+[lints]
+workspace = true

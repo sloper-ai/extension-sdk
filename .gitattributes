@@ -1,0 +1,4 @@
+# Preserve canonical source and license bytes across checkout platforms.
+* text=auto eol=lf
+*.wasm binary
+**/src/generated/** -whitespace

@@ -1,0 +1,42 @@
+package sloper:api@0.1.0;
+interface errors {
+  variant error {
+    unauthorized,
+    invalid(string),
+    too-large,
+    cancelled,
+    unavailable(string),
+  }
+}
+interface credentials {
+  use errors.{error};
+  record token {
+    value: string,
+    expires-at: string,
+    scopes: list<string>,
+  }
+  access-token: async func(connection: string) -> result<token, error>;
+}
+interface sources {
+  use errors.{error};
+  record source { id: string, filename: string, media-type: string, size: u64 }
+  open: async func(id: string) -> result<stream<u8>, error>;
+}
+interface resources {
+  use errors.{error};
+
+  resource writer {
+    write: async func(items: stream<string>) -> result<_, error>;
+    checkpoint: async func(cursor: string) -> result<_, error>;
+    /// The property names one directly declared source field, not a schema path.
+    source: async func(property: string, filename: string, contents: stream<u8>) -> result<string, error>;
+  }
+  open: async func(name: string, connection: option<string>) -> result<writer, error>;
+  record item { seed: string, value: string }
+  record page { items: list<item>, remaining: option<u64> }
+  read: async func(name: string) -> result<option<page>, error>;
+}
+interface log {
+  enum level { debug, info, warn, error }
+  write: func(severity: level, message: string);
+}

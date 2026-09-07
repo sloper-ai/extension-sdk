@@ -1,0 +1,26 @@
+    wasmtime::component::bindgen!({
+        path: "WIT_DIRECTORY",
+        world: "extension",
+        imports: {
+            "sloper:api/credentials": async | store | trappable,
+            "sloper:api/sources": async | store | trappable,
+            "sloper:api/resources.open": async | store | trappable,
+            "sloper:api/resources.read": async | store | trappable,
+            "sloper:api/resources.[method]writer.write": async | store | trappable,
+            "sloper:api/resources.[method]writer.checkpoint": async | store | trappable,
+            "sloper:api/resources.[method]writer.source": async | store | trappable,
+            default: trappable,
+        },
+        exports: { default: async | store },
+        with: {
+            "sloper:api/resources.writer": Writer,
+            "wasi:cli": wasmtime_wasi::p2::bindings::cli,
+            "wasi:clocks": wasmtime_wasi::p2::bindings::clocks,
+            "wasi:filesystem": wasmtime_wasi::p2::bindings::filesystem,
+            "wasi:io": wasmtime_wasi::p2::bindings::io,
+            "wasi:random": wasmtime_wasi::p2::bindings::random,
+            "wasi:sockets": wasmtime_wasi::p2::bindings::sockets,
+            "wasi:http": wasmtime_wasi_http::p2::bindings::http,
+        },
+        require_store_data_send: true,
+    });

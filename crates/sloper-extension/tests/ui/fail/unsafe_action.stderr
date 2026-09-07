@@ -1,0 +1,5 @@
+error: Actions must be concrete safe Rust async functions without generic parameters or variadic arguments.
+ --> tests/ui/fail/unsafe_action.rs:4:1
+  |
+4 | async unsafe fn unsafe_action() -> Result<()> {
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

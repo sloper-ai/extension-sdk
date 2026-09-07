@@ -1,0 +1,40 @@
+[package]
+name = "sloper-extension-api"
+version = "0.0.0"
+edition.workspace = true
+rust-version.workspace = true
+description = "Asynchronous client for the Sloper extension publication API"
+readme.workspace = true
+homepage.workspace = true
+repository.workspace = true
+license-file = "LICENSE"
+keywords.workspace = true
+categories = ["api-bindings", "development-tools"]
+include = ["LICENSE", "src/**"]
+publish = ["crates-io"]
+
+[dependencies]
+bytes.workspace = true
+derive_builder.workspace = true
+encoding_rs.workspace = true
+futures-util.workspace = true
+jsonschema.workspace = true
+mime.workspace = true
+percent-encoding.workspace = true
+reqwest = { workspace = true, features = ["json", "multipart", "query", "stream"] }
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tokio = { workspace = true, features = ["time"] }
+tokio-util = { workspace = true, features = ["codec"] }
+zeroize = { workspace = true, features = ["serde"] }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["io-util", "macros", "net", "rt-multi-thread"] }
+
+[features]
+# Transport and validation are explicit dependencies; no optional features.
+default = []
+
+[lints]
+workspace = true

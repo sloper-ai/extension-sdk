@@ -1,0 +1,44 @@
+package sloper:extension@0.1.0;
+
+interface action {
+  use wasi:clocks/wall-clock@0.2.12.{datetime};
+  use sloper:api/sources@0.1.0.{source};
+  record cursor { name: string, value: string }
+
+  record request {
+    operation: string,
+    action: string,
+    parameters: string,
+    configuration: string,
+    sources: list<source>,
+    cursors: list<cursor>,
+  }
+
+  record retry {
+    message: string,
+    not-before: option<datetime>,
+  }
+
+  variant failure {
+    invalid-parameters(string),
+    not-connected(string),
+    rejected(string),
+    unavailable(retry),
+    internal(string),
+  }
+  run: async func(request: request) -> result<_, failure>;
+}
+
+world extension {
+  include wasi:cli/imports@0.2.12;   // pulls in io, clocks, filesystem, random, sockets
+  import wasi:http/types@0.2.12;
+  import wasi:http/outgoing-handler@0.2.12;
+
+  import sloper:api/errors@0.1.0;
+  import sloper:api/credentials@0.1.0;
+  import sloper:api/sources@0.1.0;
+  import sloper:api/resources@0.1.0;
+  import sloper:api/log@0.1.0;
+
+  export action;
+}

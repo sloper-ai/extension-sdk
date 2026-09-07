@@ -1,0 +1,5 @@
+error: Readers exclude owned parameters; remove the parameters argument.
+  --> tests/ui/fail/reader_parameters.rs:12:1
+   |
+12 | async fn normalize(_input: Reader<Invoice>, _parameters: Parameters) -> Result<()> { Ok(()) }
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
