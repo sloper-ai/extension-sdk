@@ -61,7 +61,8 @@ wat = "1.258.0"
 wit-bindgen = { version = "=0.61.1", features = ["async-spawn"] }
 wit-component = "0.258.0"
 wit-parser = "0.258.0"
-wstd = { version = "=0.6.8", default-features = false }
+# This component-fixture pin removes the unmaintained instant dependency.
+wstd = { git = "https://github.com/bytecodealliance/wstd", rev = "6b37fd2256c8898203d006744cc8ae6de127b5e0", version = "=0.6.8", default-features = false }
 zeroize = "=1.9.0"
 
 [workspace.dependencies.wasmtime]
