@@ -30,14 +30,13 @@ pub use extension_trust::{
     GetExtensionTrustRequest, GetExtensionTrustRequestArgs, GetExtensionTrustResponse,
 };
 pub use extensions::{
-    GetReleaseEnvelopeRequest, GetReleaseEnvelopeRequestArgs, GetReleaseEnvelopeResponse,
-};
-pub use extensions::{
     CreateExtensionVersionRequest, CreateExtensionVersionRequestArgs,
     CreateExtensionVersionResponse,
 };
 pub use extensions::{
-    GetExtensionVersionRequest, GetExtensionVersionRequestArgs,
-    GetExtensionVersionResponse,
+    GetExtensionVersionRequest, GetExtensionVersionRequestArgs, GetExtensionVersionResponse,
+};
+pub use extensions::{
+    GetReleaseEnvelopeRequest, GetReleaseEnvelopeRequestArgs, GetReleaseEnvelopeResponse,
 };
 

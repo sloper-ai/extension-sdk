@@ -2,8 +2,10 @@
 //! Incremental framing independent of network chunk boundaries. Decoders cap
 //! pending records and emit multipart payload bytes before the upload finishes.
 use std::{collections::BTreeMap, mem, str};
+
 use bytes::{Buf, Bytes, BytesMut};
 use tokio_util::codec::{Decoder, LinesCodec, LinesCodecError};
+
 /// Malformed or oversized application framing.
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 pub enum DecodeError {
@@ -42,10 +44,13 @@ impl LineDecoder {
             skip_lf: false,
         }
     }
+
     /// Normalize SSE line endings and decode complete lines with `LinesCodec`.
     /// # Errors
     /// Returns an invalid UTF-8 or line-limit error from the codec.
     pub fn push(&mut self, bytes: &[u8]) -> Result<Vec<String>, DecodeError> {
+        // LinesCodec owns UTF-8, incremental scanning, and size enforcement.
+        // Only SSE's bare-CR/CRLF normalization belongs in this adapter.
         for &byte in bytes {
             if self.skip_lf {
                 self.skip_lf = false;
@@ -53,17 +58,12 @@ impl LineDecoder {
                     continue;
                 }
             }
-            self.buffer
-                .extend_from_slice(
-                    &[
-                        if byte == b'\r' {
-                            self.skip_lf = true;
-                            b'\n'
-                        } else {
-                            byte
-                        },
-                    ],
-                );
+            self.buffer.extend_from_slice(&[if byte == b'\r' {
+                self.skip_lf = true;
+                b'\n'
+            } else {
+                byte
+            }]);
         }
         let mut lines = Vec::new();
         while let Some(line) = self
@@ -75,11 +75,14 @@ impl LineDecoder {
         }
         Ok(lines)
     }
+
     /// Decode a final unterminated line through the same bounded codec.
     /// # Errors
     /// Returns invalid UTF-8 or a line-limit error.
     pub fn finish(&mut self) -> Result<Option<String>, DecodeError> {
-        self.codec.decode_eof(&mut self.buffer).map_err(|error| line_error(&error))
+        self.codec
+            .decode_eof(&mut self.buffer)
+            .map_err(|error| line_error(&error))
     }
 }
 fn line_error(error: &LinesCodecError) -> DecodeError {
@@ -125,17 +128,16 @@ impl SseDecoder {
             };
             if line.is_empty() {
                 if let Some(data) = self.data.take() {
-                    events
-                        .push(SseEvent {
-                            data,
-                            event: if self.event.is_empty() {
-                                "message".into()
-                            } else {
-                                mem::take(&mut self.event)
-                            },
-                            id: self.id.clone(),
-                            retry: self.retry,
-                        });
+                    events.push(SseEvent {
+                        data,
+                        event: if self.event.is_empty() {
+                            "message".into()
+                        } else {
+                            mem::take(&mut self.event)
+                        },
+                        id: self.id.clone(),
+                        retry: self.retry,
+                    });
                 }
                 self.event.clear();
                 continue;
@@ -202,8 +204,7 @@ impl MultipartDecoder {
     /// # Errors
     /// Rejects empty/oversized boundaries and CR/LF injection.
     pub fn new(boundary: &str, header_limit: usize) -> Result<Self, DecodeError> {
-        if boundary.is_empty() || boundary.len() > 70 || boundary.contains(['\r', '\n'])
-        {
+        if boundary.is_empty() || boundary.len() > 70 || boundary.contains(['\r', '\n']) {
             return Err(DecodeError::Multipart);
         }
         Ok(Self {
@@ -213,6 +214,7 @@ impl MultipartDecoder {
             header_limit,
         })
     }
+
     /// Consume a chunk and return headers or payload chunks immediately.
     /// # Errors
     /// Rejects malformed MIME headers and oversized preambles/headers.
@@ -265,28 +267,19 @@ impl MultipartDecoder {
                         let end = index + self.marker.len();
                         if self.buffer.len() < end + 2 {
                             if index > 0 {
-                                events
-                                    .push(
-                                        PartEvent::Data(self.buffer.split_to(index).freeze()),
-                                    );
+                                events.push(PartEvent::Data(self.buffer.split_to(index).freeze()));
                             }
                             break;
                         }
                         if &self.buffer[end..end + 2] != b"\r\n"
                             && &self.buffer[end..end + 2] != b"--"
                         {
-                            events
-                                .push(
-                                    PartEvent::Data(self.buffer.split_to(index + 2).freeze()),
-                                );
+                            events.push(PartEvent::Data(self.buffer.split_to(index + 2).freeze()));
                             continue;
                         }
                         let finished = &self.buffer[end..end + 2] == b"--";
                         if index > 0 {
-                            events
-                                .push(
-                                    PartEvent::Data(self.buffer.split_to(index).freeze()),
-                                );
+                            events.push(PartEvent::Data(self.buffer.split_to(index).freeze()));
                         }
                         self.buffer.advance(self.marker.len() + 2);
                         events.push(PartEvent::End);
@@ -301,8 +294,7 @@ impl MultipartDecoder {
                         let keep = self.marker.len() + 2;
                         if self.buffer.len() > keep {
                             let end = self.buffer.len() - keep;
-                            events
-                                .push(PartEvent::Data(self.buffer.split_to(end).freeze()));
+                            events.push(PartEvent::Data(self.buffer.split_to(end).freeze()));
                         }
                         break;
                     }
@@ -312,6 +304,7 @@ impl MultipartDecoder {
         }
         Ok(events)
     }
+
     fn read_headers(&mut self) -> Result<Option<PartEvent>, DecodeError> {
         if self.buffer.starts_with(b"\r\n") {
             self.buffer.advance(2);
@@ -319,8 +312,7 @@ impl MultipartDecoder {
             return Ok(Some(PartEvent::Begin(BTreeMap::new())));
         }
         let Some(end) = find(&self.buffer, b"\r\n\r\n") else {
-            if self.buffer.len() - delimiter_overlap(&self.buffer, b"\r\n\r\n")
-                > self.header_limit
+            if self.buffer.len() - delimiter_overlap(&self.buffer, b"\r\n\r\n") > self.header_limit
             {
                 return Err(DecodeError::Limit);
             }
@@ -329,8 +321,7 @@ impl MultipartDecoder {
         if end > self.header_limit {
             return Err(DecodeError::Limit);
         }
-        let text = str::from_utf8(&self.buffer[..end])
-            .map_err(|_| DecodeError::InvalidUtf8)?;
+        let text = str::from_utf8(&self.buffer[..end]).map_err(|_| DecodeError::InvalidUtf8)?;
         let mut headers = BTreeMap::new();
         for line in text.split("\r\n") {
             let (key, value) = line.split_once(':').ok_or(DecodeError::Multipart)?;
@@ -340,19 +331,29 @@ impl MultipartDecoder {
             headers.insert(key.to_ascii_lowercase(), value.trim().into());
         }
         self.buffer.advance(end + 4);
+
         self.state = State::Data;
         Ok(Some(PartEvent::Begin(headers)))
     }
+
     /// Verify the closing delimiter was received.
     /// # Errors
     /// Rejects truncation, including an unfinished part body.
     pub fn finish(self) -> Result<(), DecodeError> {
-        if self.state == State::Finished { Ok(()) } else { Err(DecodeError::Truncated) }
+        if self.state == State::Finished {
+            Ok(())
+        } else {
+            Err(DecodeError::Truncated)
+        }
     }
 }
 fn find(bytes: &[u8], needle: &[u8]) -> Option<usize> {
-    bytes.windows(needle.len()).position(|window| window == needle)
+    bytes
+        .windows(needle.len())
+        .position(|window| window == needle)
 }
+
+// A delimiter split across reads is framing, not preamble/header content.
 fn delimiter_overlap(bytes: &[u8], delimiter: &[u8]) -> usize {
     (1..delimiter.len())
         .rev()

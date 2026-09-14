@@ -3,6 +3,7 @@ use std::collections::BTreeMap;
 use std::fmt;
 /// Contract alias `CacheTag`.
 pub type CacheTag = String;
+
 /// Allowed values for `CreateExtensionVersionSloperVersion`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum CreateExtensionVersionSloperVersion {
@@ -10,8 +11,10 @@ pub enum CreateExtensionVersionSloperVersion {
     #[serde(rename = "2026-09-08")]
     Value20260908,
 }
+
 /// Contract alias `Digest`.
 pub type Digest = String;
+
 /// Contract model `ExtensionComponentDownload`.
 #[derive(Clone, serde::Serialize, serde::Deserialize)]
 pub struct ExtensionComponentDownload {
@@ -37,11 +40,14 @@ pub struct ExtensionComponentDownload {
 }
 impl fmt::Debug for ExtensionComponentDownload {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("ExtensionComponentDownload").finish_non_exhaustive()
+        f.debug_struct("ExtensionComponentDownload")
+            .finish_non_exhaustive()
     }
 }
+
 /// Contract alias `ExtensionId`.
 pub type ExtensionId = String;
+
 /// Contract model `ExtensionVersion`.
 #[derive(Clone, serde::Serialize, serde::Deserialize)]
 pub struct ExtensionVersion {
@@ -78,8 +84,10 @@ impl fmt::Debug for ExtensionVersion {
         f.debug_struct("ExtensionVersion").finish_non_exhaustive()
     }
 }
+
 /// Contract alias `ExtensionVersionId`.
 pub type ExtensionVersionId = String;
+
 /// Allowed values for `ExtensionVersionState`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum ExtensionVersionState {
@@ -93,6 +101,7 @@ pub enum ExtensionVersionState {
     #[serde(rename = "revoked")]
     Revoked,
 }
+
 /// Allowed values for `ExtensionVisibility`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum ExtensionVisibility {
@@ -103,6 +112,7 @@ pub enum ExtensionVisibility {
     #[serde(rename = "public")]
     Public,
 }
+
 /// Allowed values for `GetExtensionTrustSloperVersion`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum GetExtensionTrustSloperVersion {
@@ -110,6 +120,7 @@ pub enum GetExtensionTrustSloperVersion {
     #[serde(rename = "2026-09-08")]
     Value20260908,
 }
+
 /// Allowed values for `GetExtensionVersionSloperVersion`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum GetExtensionVersionSloperVersion {
@@ -117,6 +128,7 @@ pub enum GetExtensionVersionSloperVersion {
     #[serde(rename = "2026-09-08")]
     Value20260908,
 }
+
 /// Allowed values for `GetReleaseEnvelopeSloperVersion`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum GetReleaseEnvelopeSloperVersion {
@@ -124,14 +136,19 @@ pub enum GetReleaseEnvelopeSloperVersion {
     #[serde(rename = "2026-09-08")]
     Value20260908,
 }
+
 /// Contract alias `Handle`.
 pub type Handle = String;
+
 /// Contract alias `Id`.
 pub type Id = String;
+
 /// Contract alias `IdempotencyKey`.
 pub type IdempotencyKey = String;
+
 /// Contract alias `Label`.
 pub type Label = String;
+
 /// Allowed values for `OwnerKind`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum OwnerKind {
@@ -142,6 +159,7 @@ pub enum OwnerKind {
     #[serde(rename = "organization")]
     Organization,
 }
+
 /// Contract model `Problem`.
 #[derive(Clone, serde::Serialize, serde::Deserialize)]
 pub struct Problem {
@@ -182,6 +200,7 @@ impl fmt::Debug for Problem {
         f.debug_struct("Problem").finish_non_exhaustive()
     }
 }
+
 /// Contract model `PublishExtensionVersionRequest`.
 #[derive(Clone, serde::Serialize, serde::Deserialize)]
 pub struct PublishExtensionVersionRequest {
@@ -211,9 +230,11 @@ pub struct PublishExtensionVersionRequest {
 }
 impl fmt::Debug for PublishExtensionVersionRequest {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("PublishExtensionVersionRequest").finish_non_exhaustive()
+        f.debug_struct("PublishExtensionVersionRequest")
+            .finish_non_exhaustive()
     }
 }
+
 /// Contract model `PublisherIdentity`.
 #[derive(Clone, serde::Serialize, serde::Deserialize)]
 pub struct PublisherIdentity {
@@ -242,6 +263,7 @@ impl fmt::Debug for PublisherIdentity {
         f.debug_struct("PublisherIdentity").finish_non_exhaustive()
     }
 }
+
 /// Contract model `ReleaseEnvelope`.
 #[derive(Clone, serde::Serialize, serde::Deserialize)]
 pub struct ReleaseEnvelope {
@@ -282,8 +304,10 @@ impl fmt::Debug for ReleaseEnvelope {
         f.debug_struct("ReleaseEnvelope").finish_non_exhaustive()
     }
 }
+
 /// Contract alias `RetryAfter`.
 pub type RetryAfter = String;
+
 /// Contract model `Violation`.
 #[derive(Clone, serde::Serialize, serde::Deserialize)]
 pub struct Violation {
