@@ -11,13 +11,24 @@ use std::{
 
 fn main() -> Result<(), Box<dyn Error>> {
     let output = PathBuf::from(env::var_os("OUT_DIR").ok_or("OUT_DIR is required by Cargo")?);
-    let wit = output.join("wit");
-    sloper_extension_spec::write_wit(&wit)?;
-    // An absolute OUT_DIR only exists where this script ran, and Bazel runs
-    // rustc in another sandbox. `bindgen!` resolves a relative path against
-    // CARGO_MANIFEST_DIR, the package directory build scripts run in, so a
-    // path relative to the working directory holds in both places.
-    let wit = relative_to(&wit, &env::current_dir()?).unwrap_or(wit);
+    let wit = match env::var_os("SLOPER_EXTENSION_HOST_WIT_DIR") {
+        // A build that already holds the WIT tree names it relative to the
+        // package directory. Bazel does: `bindgen!` runs again when the doc
+        // tests run, in a runfiles tree where OUT_DIR is laid out differently
+        // than where this script wrote it, while the spec crate's own `wit/`
+        // sits next to this package in both trees.
+        Some(directory) => PathBuf::from(directory),
+        None => {
+            let wit = output.join("wit");
+            sloper_extension_spec::write_wit(&wit)?;
+            // An absolute OUT_DIR only exists where this script ran, and Bazel
+            // runs rustc in another sandbox. `bindgen!` resolves a relative
+            // path against CARGO_MANIFEST_DIR, the package directory build
+            // scripts run in, so a path relative to the working directory
+            // holds in both places.
+            relative_to(&wit, &env::current_dir()?).unwrap_or(wit)
+        },
+    };
     let template = fs::read_to_string("src/bindings.rs.in")?;
     let quoted = format!("{:?}", wit.to_str().ok_or("WIT build path must be valid UTF-8")?);
     fs::write(
@@ -25,6 +36,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         template.replace("\"WIT_DIRECTORY\"", &quoted),
     )?;
     println!("cargo:rerun-if-changed=src/bindings.rs.in");
+    println!("cargo:rerun-if-env-changed=SLOPER_EXTENSION_HOST_WIT_DIR");
     Ok(())
 }
 

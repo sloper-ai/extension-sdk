@@ -8,12 +8,16 @@ load("@rules_rust//rust:defs.bzl", "rust_doc_test", "rust_library", "rust_test")
 
 package(default_visibility = ["//visibility:public"])
 
-# Writes the WIT tree from sloper-extension-spec into OUT_DIR and renders
-# `bindings.rs` from `src/bindings.rs.in`. rustc runs in another sandbox, so
-# build.rs writes the WIT path relative to its working directory.
+# Renders `bindings.rs` from `src/bindings.rs.in` with the WIT directory
+# `bindgen!` reads. Under Cargo build.rs writes the WIT tree into OUT_DIR; here
+# it names the spec crate's own `wit/` sources instead, relative to this
+# package, because `bindgen!` runs twice: in rustc's sandbox, where OUT_DIR is
+# under bazel-out, and again when the doc tests run rustdoc from a runfiles
+# tree, where it is not. The spec's sources sit beside this package in both.
 cargo_build_script(
     name = "build_script",
     srcs = ["build.rs"],
+    build_script_env = {"SLOPER_EXTENSION_HOST_WIT_DIR": "../sloper-extension-spec/wit"},
     crate_name = "build_script_build",
     crate_root = "build.rs",
     data = ["src/bindings.rs.in"],
@@ -23,6 +27,12 @@ cargo_build_script(
     rundir = package_name(),
     deps = ["//third_party/extension-sdk/crates/sloper-extension-spec"],
 )
+
+# What `bindgen!` reads whenever the crate's sources are parsed.
+_COMPILE_DATA = [
+    "src/bindings.rs.in",
+    "//third_party/extension-sdk/crates/sloper-extension-spec:wit",
+]
 
 _DEPS = [
     "//third_party/extension-sdk/crates/sloper-extension-spec",
@@ -53,7 +63,7 @@ _DEPS = [
 rust_library(
     name = "sloper-extension-host",
     srcs = glob(["src/**/*.rs"]),
-    compile_data = ["src/bindings.rs.in"],
+    compile_data = _COMPILE_DATA,
     crate_features = ["runtime"],
     crate_name = "sloper_extension_host",
     crate_root = "src/lib.rs",
@@ -73,16 +83,13 @@ rust_test(
 )
 
 # `cargo test --doc`. rustdoc parses the crate again when the test runs, from
-# the runfiles tree, where the `bindgen!` path build.rs wrote (relative to the
-# execution root's bazel-out directory) names nothing, so the target is
-# `manual` until build.rs hands the WIT tree to `bindgen!` in a form that does
-# not depend on that layout. Cargo runs these doc tests.
+# the runfiles tree, which is why `bindgen!` reads the spec's WIT sources (see
+# `:build_script`).
 rust_doc_test(
     name = "doc",
     crate = ":sloper-extension-host",
     # rust_doc_test takes its features from this attribute, not from `crate`.
     crate_features = ["runtime"],
-    tags = ["manual"],
     deps = [":sloper-extension-host"],
 )
 
@@ -93,11 +100,9 @@ rust_doc_test(
 # wasm32-wasip2. CARGO_MANIFEST_DIR is set to this package's path relative to
 # the runfiles root, the tests' working directory, so that
 # `env!("CARGO_MANIFEST_DIR")` names the runfiles copy of the fixtures rather
-# than the compile action's execution root.
-#
-# component_spec.rs is not declared: it needs the `wat` dev-dependency and
-# wit-component's `dummy-module` feature, which the monorepo's crate hub does
-# not resolve.
+# than the compile action's execution root. component_spec.rs builds its
+# components at test time through `wat` and wit-component's `dummy-module`,
+# dev-dependencies the monorepo's hub declares for it.
 [
     rust_test(
         name = name,
@@ -110,17 +115,21 @@ rust_doc_test(
         edition = "2024",
         proc_macro_deps = ["@crates//:async-trait"],
         rustc_env = {"CARGO_MANIFEST_DIR": package_name()},
-        deps = _DEPS + [":sloper-extension-host"],
+        deps = _DEPS + [":sloper-extension-host"] + deps,
     )
-    for name in [
-        "host_deadlines",
-        "host_execution",
-        "host_grants",
-        "host_limits",
-        "host_logging",
-        "host_sandbox",
-        "host_sources",
-        "release_trust",
-        "sdk_execution",
+    for name, deps in [
+        (
+            "component_spec",
+            ["@crates//:wat"],
+        ),
+        ("host_deadlines", []),
+        ("host_execution", []),
+        ("host_grants", []),
+        ("host_limits", []),
+        ("host_logging", []),
+        ("host_sandbox", []),
+        ("host_sources", []),
+        ("release_trust", []),
+        ("sdk_execution", []),
     ]
 ]

@@ -30,6 +30,13 @@ rust_library(
     ],
 )
 
+# The WIT world and its dependencies, in the layout `write_wit` produces:
+# sloper-extension-host's `bindgen!` reads them from here under Bazel.
+filegroup(
+    name = "wit",
+    srcs = glob(["wit/**/*.wit"]),
+)
+
 rust_test(
     name = "unit",
     compile_data = glob(["tests/testdata/**"]),

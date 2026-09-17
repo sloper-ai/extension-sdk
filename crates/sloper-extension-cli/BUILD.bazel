@@ -127,8 +127,8 @@ rust_test(
 # crates.io access. It is `manual` until the workspace sources are data of the
 # test; run it with Cargo.
 #
-# validation_cli.rs is not declared: it needs the `wat` dev-dependency, which
-# the monorepo's crate hub does not resolve.
+# validation_cli.rs builds a trapping module at test time through `wat`, a
+# dev-dependency the monorepo's hub declares for it.
 [
     rust_test(
         name = name,
@@ -150,10 +150,10 @@ rust_test(
         deps = _DEPS + [
             ":sloper-extension-cli",
             "@crates//:wasmparser",
-        ],
+        ] + deps,
     )
-    for name, size, tags in [
-        ("api_cli", "medium", []),
+    for name, size, tags, deps in [
+        ("api_cli", "medium", [], []),
         (
             "build_cli",
             # The size the monorepo's containers class carries, applied by hand:
@@ -166,6 +166,13 @@ rust_test(
                 "no-remote-exec",
                 "requires-network",
             ],
+            [],
+        ),
+        (
+            "validation_cli",
+            "medium",
+            [],
+            ["@crates//:wat"],
         ),
     ]
 ]
