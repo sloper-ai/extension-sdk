@@ -80,7 +80,8 @@ async fn outgoing_tcp_connects_and_exchanges_bytes_through_the_standard_library(
     let mut input = request("tcp");
     input.parameters = serde_json::json!({"address": address}).to_string();
     timeout(
-        Duration::from_secs(20),
+        // A loaded CI runner has taken over 45 s for this suite.
+        Duration::from_secs(60),
         run(&engine, input, Arc::new(TestHost::default()), None),
     )
     .await
@@ -112,7 +113,8 @@ async fn outgoing_wasi_http_connects_and_exchanges_a_response() {
     let mut input = request("http");
     input.parameters = serde_json::json!({"authority": authority}).to_string();
     timeout(
-        Duration::from_secs(20),
+        // A loaded CI runner has taken over 45 s for this suite.
+        Duration::from_secs(60),
         run(&engine, input, Arc::new(TestHost::default()), None),
     )
     .await

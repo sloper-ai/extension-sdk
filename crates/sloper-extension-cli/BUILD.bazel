@@ -132,6 +132,7 @@ rust_test(
 [
     rust_test(
         name = name,
+        size = size,
         srcs = ["tests/%s.rs" % name],
         aliases = _ALIASES,
         compile_data = glob(["tests/fixtures/**"]),
@@ -151,10 +152,13 @@ rust_test(
             "@crates//:wasmparser",
         ],
     )
-    for name, tags in [
-        ("api_cli", []),
+    for name, size, tags in [
+        ("api_cli", "medium", []),
         (
             "build_cli",
+            # The size the monorepo's containers class carries, applied by hand:
+            # this package cannot load `//tools/bazel/rust:defs.bzl`.
+            "enormous",
             [
                 "local",
                 "manual",

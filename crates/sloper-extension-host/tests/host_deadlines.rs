@@ -56,7 +56,9 @@ async fn native_deadline_interrupts_computation_without_interrupting_another_att
         ..TestHost::default()
     });
     let survivor = timeout(
-        Duration::from_secs(15),
+        // A loaded CI runner has taken over 45 s for this suite; the other
+        // waits in this file already allow 60 s.
+        Duration::from_secs(60),
         run(&engine, request("wait"), Arc::clone(&host), None),
     )
     .await
