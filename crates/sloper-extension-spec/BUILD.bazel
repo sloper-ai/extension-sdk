@@ -38,7 +38,7 @@ filegroup(
 )
 
 rust_test(
-    name = "unit",
+    name = "unit_test",
     compile_data = glob(["tests/testdata/**"]),
     crate = ":sloper-extension-spec",
     edition = "2024",
@@ -46,7 +46,7 @@ rust_test(
 
 # `cargo test --doc`.
 rust_doc_test(
-    name = "doc",
+    name = "doc_test",
     crate = ":sloper-extension-spec",
     deps = [":sloper-extension-spec"],
 )

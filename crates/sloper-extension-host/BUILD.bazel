@@ -74,7 +74,7 @@ rust_library(
 
 # `cargo test --lib`.
 rust_test(
-    name = "unit",
+    name = "unit_test",
     compile_data = ["tests/fixtures/host-guest.wasm"],
     crate = ":sloper-extension-host",
     # rust_test takes its features from this attribute, not from `crate`.
@@ -86,26 +86,26 @@ rust_test(
 # the runfiles tree, which is why `bindgen!` reads the spec's WIT sources (see
 # `:build_script`).
 rust_doc_test(
-    name = "doc",
+    name = "doc_test",
     crate = ":sloper-extension-host",
     # rust_doc_test takes its features from this attribute, not from `crate`.
     crate_features = ["runtime"],
     deps = [":sloper-extension-host"],
 )
 
-# tests/<name>.rs, Cargo's integration test targets, with the helpers under
-# tests/support. The guest components they run are the checked-in
-# tests/fixtures/*.wasm (tests/guest and tests/sdk-guest are the out-of-band
-# Cargo projects that regenerate them), so no target here compiles for
-# wasm32-wasip2. CARGO_MANIFEST_DIR is set to this package's path relative to
-# the runfiles root, the tests' working directory, so that
+# tests/<name>.rs, Cargo's integration test targets, as `:<name>_test`, with
+# the helpers under tests/support. The guest components they run are the
+# checked-in tests/fixtures/*.wasm (tests/guest and tests/sdk-guest are the
+# out-of-band Cargo projects that regenerate them), so no target here compiles
+# for wasm32-wasip2. CARGO_MANIFEST_DIR is set to this package's path relative
+# to the runfiles root, the tests' working directory, so that
 # `env!("CARGO_MANIFEST_DIR")` names the runfiles copy of the fixtures rather
 # than the compile action's execution root. component_spec.rs builds its
 # components at test time through `wat` and wit-component's `dummy-module`,
 # dev-dependencies the monorepo's hub declares for it.
 [
     rust_test(
-        name = name,
+        name = name + "_test",
         srcs = ["tests/%s.rs" % name] + glob(["tests/support/**/*.rs"]),
         compile_data = glob(["tests/fixtures/**"]),
         crate_features = ["runtime"],

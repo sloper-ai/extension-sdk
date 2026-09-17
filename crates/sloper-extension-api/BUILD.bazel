@@ -32,14 +32,14 @@ rust_library(
 )
 
 rust_test(
-    name = "unit",
+    name = "unit_test",
     crate = ":sloper-extension-api",
     edition = "2024",
 )
 
 # `cargo test --doc`.
 rust_doc_test(
-    name = "doc",
+    name = "doc_test",
     crate = ":sloper-extension-api",
     deps = [":sloper-extension-api"],
 )

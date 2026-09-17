@@ -91,7 +91,7 @@ rust_binary(
 # `cargo test --lib`. src/scaffold.rs `include!`s build.rs to test its
 # revision resolution.
 rust_test(
-    name = "unit",
+    name = "unit_test",
     compile_data = ["build.rs"] + glob(["tests/fixtures/**"]),
     crate = ":sloper-extension-cli",
     edition = "2024",
@@ -100,24 +100,25 @@ rust_test(
 
 # `cargo test --doc`.
 rust_doc_test(
-    name = "doc",
+    name = "doc_test",
     crate = ":sloper-extension-cli",
     deps = [":sloper-extension-cli"],
 )
 
 # `cargo test --bin sloper-extension`.
 rust_test(
-    name = "sloper-extension_unit",
+    name = "sloper-extension_unit_test",
     crate = ":sloper-extension",
     edition = "2024",
     deps = ["@crates//:wasmparser"],
 )
 
-# tests/<name>.rs, Cargo's integration test targets. They run the CLI binary
-# named by CARGO_BIN_EXE_sloper-extension, a path relative to the runfiles root
-# that is the test's working directory. CARGO_MANIFEST_DIR is set to the same
-# kind of relative path so that `env!("CARGO_MANIFEST_DIR")` names this package
-# in the runfiles tree rather than the compile action's execution root.
+# tests/<name>.rs, Cargo's integration test targets, as `:<name>_test`. They
+# run the CLI binary named by CARGO_BIN_EXE_sloper-extension, a path relative
+# to the runfiles root that is the test's working directory. CARGO_MANIFEST_DIR
+# is set to the same kind of relative path so that `env!("CARGO_MANIFEST_DIR")`
+# names this package in the runfiles tree rather than the compile action's
+# execution root.
 #
 # build_cli.rs runs a real Cargo build of a wasm32-wasip2 component against
 # this repository's own Cargo workspace (its root manifest and Cargo.lock,
@@ -131,7 +132,7 @@ rust_test(
 # dev-dependency the monorepo's hub declares for it.
 [
     rust_test(
-        name = name,
+        name = name + "_test",
         size = size,
         srcs = ["tests/%s.rs" % name],
         aliases = _ALIASES,
