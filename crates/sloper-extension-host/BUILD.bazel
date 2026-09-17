@@ -4,7 +4,7 @@
 # on its own; Cargo remains this repository's build.
 
 load("@rules_rust//cargo:defs.bzl", "cargo_build_script")
-load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
+load("@rules_rust//rust:defs.bzl", "rust_doc_test", "rust_library", "rust_test")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -70,6 +70,15 @@ rust_test(
     # rust_test takes its features from this attribute, not from `crate`.
     crate_features = ["runtime"],
     edition = "2024",
+)
+
+# `cargo test --doc`.
+rust_doc_test(
+    name = "doc",
+    crate = ":sloper-extension-host",
+    # rust_doc_test takes its features from this attribute, not from `crate`.
+    crate_features = ["runtime"],
+    deps = [":sloper-extension-host"],
 )
 
 # tests/<name>.rs, Cargo's integration test targets, with the helpers under

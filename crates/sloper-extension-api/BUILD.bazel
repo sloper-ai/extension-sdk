@@ -3,7 +3,7 @@
 # supplies `@rules_rust` and the `@crates` hub, so this package does not build
 # on its own; Cargo remains this repository's build.
 
-load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
+load("@rules_rust//rust:defs.bzl", "rust_doc_test", "rust_library", "rust_test")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -35,4 +35,11 @@ rust_test(
     name = "unit",
     crate = ":sloper-extension-api",
     edition = "2024",
+)
+
+# `cargo test --doc`.
+rust_doc_test(
+    name = "doc",
+    crate = ":sloper-extension-api",
+    deps = [":sloper-extension-api"],
 )

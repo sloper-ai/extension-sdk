@@ -4,7 +4,7 @@
 # on its own; Cargo remains this repository's build.
 
 load("@rules_rust//cargo:defs.bzl", "cargo_build_script")
-load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library", "rust_test")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_doc_test", "rust_library", "rust_test")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -96,6 +96,13 @@ rust_test(
     crate = ":sloper-extension-cli",
     edition = "2024",
     deps = ["@crates//:wasmparser"],
+)
+
+# `cargo test --doc`.
+rust_doc_test(
+    name = "doc",
+    crate = ":sloper-extension-cli",
+    deps = [":sloper-extension-cli"],
 )
 
 # `cargo test --bin sloper-extension`.
