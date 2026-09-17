@@ -38,11 +38,20 @@ impl Error {
 
 #[cfg(not(test))]
 fn main() -> Result<(), Error> {
+    println!("cargo:rerun-if-env-changed=SLOPER_EXTENSION_SDK_REVISION_FILE");
     println!("cargo:rerun-if-env-changed=SLOPER_EXTENSION_SDK_REVISION");
     println!("cargo:rerun-if-changed=release-revision");
     println!("cargo:rerun-if-changed=.cargo_vcs_info.json");
     println!("cargo:rerun-if-changed=../../.git");
     let manifest = std::env::var_os("CARGO_MANIFEST_DIR").expect("Cargo must provide the package manifest directory");
+    // Bazel passes build script environment values at analysis time, so a
+    // stamped revision can only arrive through a file it names.
+    if let Some(file) = std::env::var_os("SLOPER_EXTENSION_SDK_REVISION_FILE") {
+        println!("cargo:rerun-if-changed={}", Path::new(&file).display());
+        let revision = file_revision(Path::new(&file))?;
+        println!("cargo:rustc-env=SLOPER_EXTENSION_SDK_REVISION={revision}");
+        return Ok(());
+    }
     if let Some(revision) = resolve_revision(
         Path::new(&manifest),
         std::env::var_os("SLOPER_EXTENSION_SDK_REVISION"),
@@ -109,6 +118,13 @@ fn resolve_revision(
         return Ok(None);
     }
     validated_revision(Some(&git_head(sdk_root)?), "SDK checkout Git HEAD").map(Some)
+}
+
+fn file_revision(file: &Path) -> Result<String, Error> {
+    validated_revision(
+        Some(fs::read_to_string(file)?.trim()),
+        "SLOPER_EXTENSION_SDK_REVISION_FILE",
+    )
 }
 
 fn validated_revision(value: Option<&str>, source: &'static str) -> Result<String, Error> {
@@ -291,6 +307,25 @@ mod tests {
         ] {
             assert!(resolve_revision(package.path(), Some(explicit.into()), no_git).is_err());
         }
+    }
+
+    #[test]
+    fn revision_file_is_trimmed_and_validated() {
+        let directory = tempfile::tempdir().unwrap();
+        let file = directory.path().join("revision");
+        fs::write(&file, format!("  {}\n", EXPLICIT.to_uppercase())).unwrap();
+        assert_eq!(file_revision(&file).unwrap(), EXPLICIT);
+        for revision in ["", "main", "1234567", "1234567890abcdef1234567890abcdef1234567g"] {
+            fs::write(&file, revision).unwrap();
+            assert!(matches!(
+                file_revision(&file),
+                Err(Error::InvalidRevision("SLOPER_EXTENSION_SDK_REVISION_FILE"))
+            ));
+        }
+        assert!(matches!(
+            file_revision(&directory.path().join("missing")),
+            Err(Error::Io(_))
+        ));
     }
 
     #[test]

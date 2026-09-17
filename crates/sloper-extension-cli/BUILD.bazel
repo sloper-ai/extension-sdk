@@ -1,0 +1,179 @@
+# Bazel package for the sloper monorepo (sloper-ai/sloper), which checks this
+# repository out at third_party/extension-sdk. That workspace's MODULE.bazel
+# supplies `@rules_rust` and the `@crates` hub, so this package does not build
+# on its own; Cargo remains this repository's build.
+
+load("@rules_rust//cargo:defs.bzl", "cargo_build_script")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_doc_test", "rust_library", "rust_test")
+
+package(default_visibility = ["//visibility:public"])
+
+# Embeds SLOPER_EXTENSION_SDK_REVISION (src/scaffold.rs). Bazel fixes build
+# script environment values at analysis time, so a stamped revision can only
+# arrive through the file SLOPER_EXTENSION_SDK_REVISION_FILE names, which
+# build.rs reads before any other revision source. The monorepo's
+# //tools/bazel:extension_sdk_revision writes this checkout's revision there
+# from the workspace status.
+cargo_build_script(
+    name = "build_script",
+    srcs = ["build.rs"],
+    build_script_env = {
+        "SLOPER_EXTENSION_SDK_REVISION_FILE": "$(execpath //tools/bazel:extension_sdk_revision)",
+    },
+    crate_name = "build_script_build",
+    crate_root = "build.rs",
+    data = ["//tools/bazel:extension_sdk_revision"],
+    edition = "2024",
+    deps = [
+        "@crates//:serde_json",
+        "@crates//:thiserror",
+    ],
+)
+
+_DEPS = [
+    "//third_party/extension-sdk/crates/sloper-extension-api",
+    "//third_party/extension-sdk/crates/sloper-extension-host",
+    "//third_party/extension-sdk/crates/sloper-extension-spec",
+    "@crates//:base64",
+    "@crates//:bytes",
+    "@crates//:clap",
+    "@crates//:futures-util",
+    # The monorepo resolves png 0.17.16 transitively as well.
+    "@crates//:png-0.18.1",
+    "@crates//:reqwest",
+    "@crates//:serde",
+    "@crates//:serde_json",
+    "@crates//:sha2",
+    "@crates//:tempfile",
+    "@crates//:thiserror",
+    "@crates//:time",
+    "@crates//:tokio",
+    "@crates//:url",
+    "@crates//:uuid",
+    "@crates//:zeroize",
+]
+
+# Cargo.toml renames sloper-extension-api to `generated_client`.
+_ALIASES = {
+    "//third_party/extension-sdk/crates/sloper-extension-api": "generated_client",
+}
+
+# The feature set the monorepo resolves; the crate declares no features.
+rust_library(
+    name = "sloper-extension-cli",
+    srcs = glob(
+        ["src/**/*.rs"],
+        exclude = ["src/main.rs"],
+    ),
+    aliases = _ALIASES,
+    compile_data = glob(["templates/**"]),
+    crate_name = "sloper_extension_cli",
+    crate_root = "src/lib.rs",
+    edition = "2024",
+    proc_macro_deps = ["@crates//:async-trait"],
+    deps = _DEPS + [":build_script"],
+)
+
+rust_binary(
+    name = "sloper-extension",
+    srcs = ["src/main.rs"] + glob(["src/generated/**/*.rs"]),
+    aliases = _ALIASES,
+    crate_name = "sloper_extension",
+    crate_root = "src/main.rs",
+    edition = "2024",
+    proc_macro_deps = ["@crates//:async-trait"],
+    deps = _DEPS + [
+        ":build_script",
+        ":sloper-extension-cli",
+    ],
+)
+
+# `cargo test --lib`. src/scaffold.rs `include!`s build.rs to test its
+# revision resolution.
+rust_test(
+    name = "unit_test",
+    compile_data = ["build.rs"] + glob(["tests/fixtures/**"]),
+    crate = ":sloper-extension-cli",
+    edition = "2024",
+    deps = ["@crates//:wasmparser"],
+)
+
+# `cargo test --doc`.
+rust_doc_test(
+    name = "doc_test",
+    crate = ":sloper-extension-cli",
+    deps = [":sloper-extension-cli"],
+)
+
+# `cargo test --bin sloper-extension`.
+rust_test(
+    name = "sloper-extension_unit_test",
+    crate = ":sloper-extension",
+    edition = "2024",
+    deps = ["@crates//:wasmparser"],
+)
+
+# tests/<name>.rs, Cargo's integration test targets, as `:<name>_test`. They
+# run the CLI binary named by CARGO_BIN_EXE_sloper-extension, a path relative
+# to the runfiles root that is the test's working directory. CARGO_MANIFEST_DIR
+# is set to the same kind of relative path so that `env!("CARGO_MANIFEST_DIR")`
+# names this package in the runfiles tree rather than the compile action's
+# execution root.
+#
+# build_cli.rs runs a real Cargo build of a wasm32-wasip2 component against
+# this repository's own Cargo workspace (its root manifest and Cargo.lock,
+# crates/sloper-extension and the other members), which is outside the Bazel
+# graph and absent from the runfiles, so under Bazel it fails when it copies
+# Cargo.lock. It also needs a host Cargo with the wasm32-wasip2 target and
+# crates.io access. It is `manual` until the workspace sources are data of the
+# test; run it with Cargo.
+#
+# validation_cli.rs builds a trapping module at test time through `wat`, a
+# dev-dependency the monorepo's hub declares for it.
+[
+    rust_test(
+        name = name + "_test",
+        size = size,
+        srcs = ["tests/%s.rs" % name],
+        aliases = _ALIASES,
+        compile_data = glob(["tests/fixtures/**"]),
+        crate_name = name,
+        crate_root = "tests/%s.rs" % name,
+        data = [":sloper-extension"] + glob(["tests/fixtures/**"]),
+        edition = "2024",
+        env = {"CARGO_BIN_EXE_sloper-extension": "$(rootpath :sloper-extension)"},
+        proc_macro_deps = ["@crates//:async-trait"],
+        rustc_env = {
+            "CARGO_BIN_EXE_sloper-extension": "$(rootpath :sloper-extension)",
+            "CARGO_MANIFEST_DIR": package_name(),
+        },
+        tags = tags,
+        deps = _DEPS + [
+            ":sloper-extension-cli",
+            "@crates//:wasmparser",
+        ] + deps,
+    )
+    for name, size, tags, deps in [
+        ("api_cli", "medium", [], []),
+        (
+            "build_cli",
+            # The size the monorepo's containers class carries, applied by hand:
+            # this package cannot load `//tools/bazel/rust:defs.bzl`.
+            "enormous",
+            [
+                "local",
+                "manual",
+                "no-cache",
+                "no-remote-exec",
+                "requires-network",
+            ],
+            [],
+        ),
+        (
+            "validation_cli",
+            "medium",
+            [],
+            ["@crates//:wat"],
+        ),
+    ]
+]
