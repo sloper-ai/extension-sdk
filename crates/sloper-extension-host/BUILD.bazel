@@ -67,6 +67,8 @@ rust_test(
     name = "unit",
     compile_data = ["tests/fixtures/host-guest.wasm"],
     crate = ":sloper-extension-host",
+    # rust_test takes its features from this attribute, not from `crate`.
+    crate_features = ["runtime"],
     edition = "2024",
 )
 
