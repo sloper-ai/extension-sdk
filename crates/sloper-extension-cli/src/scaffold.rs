@@ -19,9 +19,10 @@ pub struct ScaffoldResult {
 
 /// Immutable SDK revision embedded when these tools were built.
 ///
-/// Builds prefer an explicit `SLOPER_EXTENSION_SDK_REVISION`, followed by
-/// the release's bundled source revision, Cargo's packaged Git provenance,
-/// then the SDK checkout's own Git HEAD.
+/// Builds prefer the file named by `SLOPER_EXTENSION_SDK_REVISION_FILE`, then
+/// an explicit `SLOPER_EXTENSION_SDK_REVISION`, followed by the release's
+/// bundled source revision, Cargo's packaged Git provenance, then the SDK
+/// checkout's own Git HEAD.
 /// Registry installations therefore retain the packaged revision without
 /// requiring Git. Returns `None` when provenance is missing or the package
 /// contains uncommitted changes, unless an explicit or release revision was
