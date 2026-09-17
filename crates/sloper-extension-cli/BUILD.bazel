@@ -120,9 +120,10 @@ rust_test(
 # in the runfiles tree rather than the compile action's execution root.
 #
 # build_cli.rs runs a real Cargo build of a wasm32-wasip2 component against
-# this repository's own Cargo workspace (crates/sloper-extension, its macros
-# and Cargo.lock), which is outside the Bazel graph and absent from the
-# runfiles, and it needs a host Cargo with the wasm32-wasip2 target and
+# this repository's own Cargo workspace (its root manifest and Cargo.lock,
+# crates/sloper-extension and the other members), which is outside the Bazel
+# graph and absent from the runfiles, so under Bazel it fails when it copies
+# Cargo.lock. It also needs a host Cargo with the wasm32-wasip2 target and
 # crates.io access. It is `manual` until the workspace sources are data of the
 # test; run it with Cargo.
 #

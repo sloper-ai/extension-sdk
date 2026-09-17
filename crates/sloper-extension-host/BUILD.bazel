@@ -72,12 +72,17 @@ rust_test(
     edition = "2024",
 )
 
-# `cargo test --doc`.
+# `cargo test --doc`. rustdoc parses the crate again when the test runs, from
+# the runfiles tree, where the `bindgen!` path build.rs wrote (relative to the
+# execution root's bazel-out directory) names nothing, so the target is
+# `manual` until build.rs hands the WIT tree to `bindgen!` in a form that does
+# not depend on that layout. Cargo runs these doc tests.
 rust_doc_test(
     name = "doc",
     crate = ":sloper-extension-host",
     # rust_doc_test takes its features from this attribute, not from `crate`.
     crate_features = ["runtime"],
+    tags = ["manual"],
     deps = [":sloper-extension-host"],
 )
 
