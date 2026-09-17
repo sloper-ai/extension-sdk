@@ -1,0 +1,72 @@
+# Bazel package for the sloper monorepo (sloper-ai/sloper), which checks this
+# repository out at third_party/extension-sdk. That workspace's MODULE.bazel
+# supplies `@rules_rust` and the `@crates` hub, so this package does not build
+# on its own; Cargo remains this repository's build.
+
+load("@rules_rust//cargo:defs.bzl", "cargo_build_script")
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
+
+package(default_visibility = ["//visibility:public"])
+
+# Writes the WIT tree from sloper-extension-spec into OUT_DIR and renders
+# `bindings.rs` from `src/bindings.rs.in`. rustc runs in another sandbox, so
+# build.rs writes the WIT path relative to its working directory.
+cargo_build_script(
+    name = "build_script",
+    srcs = ["build.rs"],
+    crate_name = "build_script_build",
+    crate_root = "build.rs",
+    data = ["src/bindings.rs.in"],
+    edition = "2024",
+    # Run in the package directory, as Cargo does, so that relative path
+    # resolves against the CARGO_MANIFEST_DIR rustc later uses.
+    rundir = package_name(),
+    deps = ["//third_party/extension-sdk/crates/sloper-extension-spec"],
+)
+
+# The feature set rust/sloper-runtime enables (`features = ["runtime"]`).
+rust_library(
+    name = "sloper-extension-host",
+    srcs = glob(["src/**/*.rs"]),
+    compile_data = ["src/bindings.rs.in"],
+    crate_features = ["runtime"],
+    crate_name = "sloper_extension_host",
+    crate_root = "src/lib.rs",
+    edition = "2024",
+    proc_macro_deps = ["@crates//:async-trait"],
+    deps = [
+        ":build_script",
+        "//third_party/extension-sdk/crates/sloper-extension-spec",
+        "@crates//:aws-lc-rs",
+        "@crates//:base64",
+        # The monorepo also depends on ed25519-dalek 2.2.0, so the hub has no
+        # unversioned alias for it.
+        "@crates//:ed25519-dalek-3.0.0",
+        "@crates//:semver",
+        "@crates//:serde",
+        "@crates//:serde_json",
+        "@crates//:sha2",
+        "@crates//:tempfile",
+        "@crates//:thiserror",
+        "@crates//:time",
+        "@crates//:tokio",
+        "@crates//:tokio-util",
+        "@crates//:wasmparser",
+        "@crates//:wasmtime",
+        "@crates//:wasmtime-wasi",
+        "@crates//:wasmtime-wasi-http",
+        "@crates//:wit-component",
+        "@crates//:wit-parser",
+        "@crates//:zeroize",
+    ],
+)
+
+# Unit tests only. The integration tests under tests/ need guest components
+# built for wasm32-wasip2 and the `wat` dev-dependency, which the monorepo's
+# Cargo.lock does not resolve.
+rust_test(
+    name = "unit",
+    compile_data = ["tests/fixtures/host-guest.wasm"],
+    crate = ":sloper-extension-host",
+    edition = "2024",
+)

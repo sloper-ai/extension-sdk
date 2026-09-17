@@ -1,0 +1,106 @@
+# Bazel package for the sloper monorepo (sloper-ai/sloper), which checks this
+# repository out at third_party/extension-sdk. That workspace's MODULE.bazel
+# supplies `@rules_rust` and the `@crates` hub, so this package does not build
+# on its own; Cargo remains this repository's build.
+
+load("@rules_rust//cargo:defs.bzl", "cargo_build_script")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library", "rust_test")
+
+package(default_visibility = ["//visibility:public"])
+
+# Placeholder SDK revision until workspace stamping lands; it must stay a
+# 40-character hexadecimal Git revision for build.rs to accept it.
+_PLACEHOLDER_REVISION = "0000000000000000000000000000000000000000"
+
+genrule(
+    name = "sdk_revision",
+    outs = ["sdk_revision.txt"],
+    cmd = "echo " + _PLACEHOLDER_REVISION + " > $@",
+    cmd_bat = "echo " + _PLACEHOLDER_REVISION + "> $@",
+)
+
+# Embeds SLOPER_EXTENSION_SDK_REVISION (src/scaffold.rs). Bazel fixes build
+# script environment values at analysis time, so a stamped revision can only
+# arrive through the file SLOPER_EXTENSION_SDK_REVISION_FILE names, which
+# build.rs reads before any other revision source.
+cargo_build_script(
+    name = "build_script",
+    srcs = ["build.rs"],
+    build_script_env = {
+        "SLOPER_EXTENSION_SDK_REVISION_FILE": "$(execpath :sdk_revision)",
+    },
+    crate_name = "build_script_build",
+    crate_root = "build.rs",
+    data = [":sdk_revision"],
+    edition = "2024",
+    deps = [
+        "@crates//:serde_json",
+        "@crates//:thiserror",
+    ],
+)
+
+_DEPS = [
+    ":build_script",
+    "//third_party/extension-sdk/crates/sloper-extension-api",
+    "//third_party/extension-sdk/crates/sloper-extension-host",
+    "//third_party/extension-sdk/crates/sloper-extension-spec",
+    "@crates//:base64",
+    "@crates//:bytes",
+    "@crates//:clap",
+    "@crates//:futures-util",
+    # The monorepo resolves png 0.17.16 transitively as well.
+    "@crates//:png-0.18.1",
+    "@crates//:reqwest",
+    "@crates//:serde",
+    "@crates//:serde_json",
+    "@crates//:sha2",
+    "@crates//:tempfile",
+    "@crates//:thiserror",
+    "@crates//:time",
+    "@crates//:tokio",
+    "@crates//:url",
+    "@crates//:uuid",
+    "@crates//:zeroize",
+]
+
+# Cargo.toml renames sloper-extension-api to `generated_client`.
+_ALIASES = {
+    "//third_party/extension-sdk/crates/sloper-extension-api": "generated_client",
+}
+
+# The feature set the monorepo resolves; the crate declares no features.
+rust_library(
+    name = "sloper-extension-cli",
+    srcs = glob(
+        ["src/**/*.rs"],
+        exclude = ["src/main.rs"],
+    ),
+    aliases = _ALIASES,
+    compile_data = glob(["templates/**"]),
+    crate_name = "sloper_extension_cli",
+    crate_root = "src/lib.rs",
+    edition = "2024",
+    proc_macro_deps = ["@crates//:async-trait"],
+    deps = _DEPS,
+)
+
+rust_binary(
+    name = "sloper-extension",
+    srcs = ["src/main.rs"] + glob(["src/generated/**/*.rs"]),
+    aliases = _ALIASES,
+    crate_name = "sloper_extension",
+    crate_root = "src/main.rs",
+    edition = "2024",
+    proc_macro_deps = ["@crates//:async-trait"],
+    deps = _DEPS + [":sloper-extension-cli"],
+)
+
+# Unit tests only; tests/ holds CLI integration tests. src/scaffold.rs
+# `include!`s build.rs to test its revision resolution.
+rust_test(
+    name = "unit",
+    compile_data = ["build.rs"] + glob(["tests/fixtures/**"]),
+    crate = ":sloper-extension-cli",
+    edition = "2024",
+    deps = ["@crates//:wasmparser"],
+)

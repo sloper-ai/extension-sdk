@@ -1,0 +1,38 @@
+# Bazel package for the sloper monorepo (sloper-ai/sloper), which checks this
+# repository out at third_party/extension-sdk. That workspace's MODULE.bazel
+# supplies `@rules_rust` and the `@crates` hub, so this package does not build
+# on its own; Cargo remains this repository's build.
+
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
+
+package(default_visibility = ["//visibility:public"])
+
+rust_library(
+    name = "sloper-extension-spec",
+    srcs = glob(
+        ["src/**/*.rs"],
+        exclude = ["src/bin/**"],
+    ),
+    # `src/wit.rs` embeds the WIT world and its dependencies with `include_str!`.
+    compile_data = glob(["wit/**/*.wit"]),
+    crate_name = "sloper_extension_spec",
+    crate_root = "src/lib.rs",
+    edition = "2024",
+    deps = [
+        "@crates//:schemars",
+        "@crates//:semver",
+        "@crates//:serde",
+        "@crates//:serde_json",
+        "@crates//:thiserror",
+        "@crates//:time",
+        "@crates//:url",
+        "@crates//:uuid",
+    ],
+)
+
+rust_test(
+    name = "unit",
+    compile_data = glob(["tests/testdata/**"]),
+    crate = ":sloper-extension-spec",
+    edition = "2024",
+)
