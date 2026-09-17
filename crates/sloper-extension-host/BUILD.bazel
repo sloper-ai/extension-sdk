@@ -24,6 +24,31 @@ cargo_build_script(
     deps = ["//third_party/extension-sdk/crates/sloper-extension-spec"],
 )
 
+_DEPS = [
+    "//third_party/extension-sdk/crates/sloper-extension-spec",
+    "@crates//:aws-lc-rs",
+    "@crates//:base64",
+    # The monorepo also depends on ed25519-dalek 2.2.0, so the hub has no
+    # unversioned alias for it.
+    "@crates//:ed25519-dalek-3.0.0",
+    "@crates//:semver",
+    "@crates//:serde",
+    "@crates//:serde_json",
+    "@crates//:sha2",
+    "@crates//:tempfile",
+    "@crates//:thiserror",
+    "@crates//:time",
+    "@crates//:tokio",
+    "@crates//:tokio-util",
+    "@crates//:wasmparser",
+    "@crates//:wasmtime",
+    "@crates//:wasmtime-wasi",
+    "@crates//:wasmtime-wasi-http",
+    "@crates//:wit-component",
+    "@crates//:wit-parser",
+    "@crates//:zeroize",
+]
+
 # The feature set rust/sloper-runtime enables (`features = ["runtime"]`).
 rust_library(
     name = "sloper-extension-host",
@@ -34,39 +59,52 @@ rust_library(
     crate_root = "src/lib.rs",
     edition = "2024",
     proc_macro_deps = ["@crates//:async-trait"],
-    deps = [
-        ":build_script",
-        "//third_party/extension-sdk/crates/sloper-extension-spec",
-        "@crates//:aws-lc-rs",
-        "@crates//:base64",
-        # The monorepo also depends on ed25519-dalek 2.2.0, so the hub has no
-        # unversioned alias for it.
-        "@crates//:ed25519-dalek-3.0.0",
-        "@crates//:semver",
-        "@crates//:serde",
-        "@crates//:serde_json",
-        "@crates//:sha2",
-        "@crates//:tempfile",
-        "@crates//:thiserror",
-        "@crates//:time",
-        "@crates//:tokio",
-        "@crates//:tokio-util",
-        "@crates//:wasmparser",
-        "@crates//:wasmtime",
-        "@crates//:wasmtime-wasi",
-        "@crates//:wasmtime-wasi-http",
-        "@crates//:wit-component",
-        "@crates//:wit-parser",
-        "@crates//:zeroize",
-    ],
+    deps = _DEPS + [":build_script"],
 )
 
-# Unit tests only. The integration tests under tests/ need guest components
-# built for wasm32-wasip2 and the `wat` dev-dependency, which the monorepo's
-# Cargo.lock does not resolve.
+# `cargo test --lib`.
 rust_test(
     name = "unit",
     compile_data = ["tests/fixtures/host-guest.wasm"],
     crate = ":sloper-extension-host",
     edition = "2024",
 )
+
+# tests/<name>.rs, Cargo's integration test targets, with the helpers under
+# tests/support. The guest components they run are the checked-in
+# tests/fixtures/*.wasm (tests/guest and tests/sdk-guest are the out-of-band
+# Cargo projects that regenerate them), so no target here compiles for
+# wasm32-wasip2. CARGO_MANIFEST_DIR is set to this package's path relative to
+# the runfiles root, the tests' working directory, so that
+# `env!("CARGO_MANIFEST_DIR")` names the runfiles copy of the fixtures rather
+# than the compile action's execution root.
+#
+# component_spec.rs is not declared: it needs the `wat` dev-dependency and
+# wit-component's `dummy-module` feature, which the monorepo's crate hub does
+# not resolve.
+[
+    rust_test(
+        name = name,
+        srcs = ["tests/%s.rs" % name] + glob(["tests/support/**/*.rs"]),
+        compile_data = glob(["tests/fixtures/**"]),
+        crate_features = ["runtime"],
+        crate_name = name,
+        crate_root = "tests/%s.rs" % name,
+        data = glob(["tests/fixtures/**"]),
+        edition = "2024",
+        proc_macro_deps = ["@crates//:async-trait"],
+        rustc_env = {"CARGO_MANIFEST_DIR": package_name()},
+        deps = _DEPS + [":sloper-extension-host"],
+    )
+    for name in [
+        "host_deadlines",
+        "host_execution",
+        "host_grants",
+        "host_limits",
+        "host_logging",
+        "host_sandbox",
+        "host_sources",
+        "release_trust",
+        "sdk_execution",
+    ]
+]
